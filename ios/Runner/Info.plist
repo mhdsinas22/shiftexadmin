@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>SHIIFTEX Admin requires camera access to capture promotional campaign images.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>SHIIFTEX Admin requires photo library access to select promotional campaign images.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

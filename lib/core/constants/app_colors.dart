@@ -17,4 +17,18 @@ class AppColors {
   static const lightPeach = Color(0XFFFEEDD7);
   static const orange = Color(0XFFF97316);
   static const goldenRod = Color(0XFFFEE09D);
+  static const alertRed = Color(0xffdc3545);
+
+  // ShiftEx Theme Colors
+  static const darkNavy = Color(0xFF1E2235);
+  static const darkNavyDarker = Color(0xFF16192E);
+  static const backgroundLight = Color(0xFFF8F9FD);
+  static const textPrimary = Color(0xFF1E2235);
+  static const textSecondary = Color(0xFF64748B);
+  static const textHint = Color(0xFF94A3B8);
+  static const borderLight = Color(0xFFE2E8F0);
+  static const borderFocused = Color(0xFF1E2235);
+  static const linkBlue = Color(0xFF2563EB);
+  static const cardBackground = Color(0xFFFFFFFF);
+  static const cardShadow = Color(0x0A0F172A);
 }
