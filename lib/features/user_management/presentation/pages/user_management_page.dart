@@ -197,7 +197,8 @@ class _UserManagementViewState extends State<UserManagementView> {
           },
           builder: (context, state) {
             final topPending = state.topPendingCustomer;
-            final isInitialShimmer = !state.hasLoadedOnce &&
+            final isInitialShimmer =
+                !state.hasLoadedOnce &&
                 (state.status == UserManagementStatus.initial ||
                     state.status == UserManagementStatus.loading);
 
@@ -375,8 +376,8 @@ class _UserManagementViewState extends State<UserManagementView> {
 
                       // Top Earners Card
                       TopEarnersCardWidget(
-                        customers: state.topEarners.isNotEmpty ||
-                                state.hasLoadedOnce
+                        customers:
+                            state.topEarners.isNotEmpty || state.hasLoadedOnce
                             ? state.topEarners
                             : state.customers,
                         selectedRange: state.topEarnersRange,

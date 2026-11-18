@@ -3,6 +3,7 @@ import 'package:shiftexadmin/features/ads/presentation/di/ads_di.dart';
 import 'package:shiftexadmin/features/authentication/presentation/di/authentication_di.dart';
 import 'package:shiftexadmin/features/dashboard/di/dashboard_di.dart';
 import 'package:shiftexadmin/features/scan_pos/presentation/di/scan_pos_di.dart';
+import 'package:shiftexadmin/features/settings/admin_access/presentation/di/admin_access_di.dart';
 import 'package:shiftexadmin/features/settings/daily_streak_settings/presentation/di/daily_streak_settings_di.dart';
 import 'package:shiftexadmin/features/settings/points_to_cash/presentation/di/points_to_cash_di.dart';
 import 'package:shiftexadmin/features/user_management/presentation/di/user_management_di.dart';
@@ -42,4 +43,7 @@ Future<void> initDependencies({SupabaseClient? mockSupabaseClient}) async {
 
   // Feature Dependencies - Admin Dashboard
   initDashboardDi(getIt);
+
+  // Feature Dependencies - Admin Access & Permission Management
+  initAdminAccessDependencies(getIt);
 }

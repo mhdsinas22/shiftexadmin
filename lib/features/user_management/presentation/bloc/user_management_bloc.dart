@@ -64,12 +64,14 @@ class UserManagementBloc
         AppLogger.warning('Could not fetch top earners ($range): $e');
       }
     }
-    final fromCustomers = fallbackCustomers
-        .where((c) => c.isApproved && c.displayTopEarnerPoints > 0)
-        .toList()
-      ..sort(
-        (a, b) => b.displayTopEarnerPoints.compareTo(a.displayTopEarnerPoints),
-      );
+    final fromCustomers =
+        fallbackCustomers
+            .where((c) => c.isApproved && c.displayTopEarnerPoints > 0)
+            .toList()
+          ..sort(
+            (a, b) =>
+                b.displayTopEarnerPoints.compareTo(a.displayTopEarnerPoints),
+          );
     return fromCustomers.take(3).toList();
   }
 
@@ -77,10 +79,12 @@ class UserManagementBloc
     LoadUserManagementRequested event,
     Emitter<UserManagementState> emit,
   ) async {
-    emit(state.copyWith(
-      status: UserManagementStatus.loading,
-      clearSuccessMessage: true,
-    ));
+    emit(
+      state.copyWith(
+        status: UserManagementStatus.loading,
+        clearSuccessMessage: true,
+      ),
+    );
 
     try {
       final statistics = await getUserStatisticsUseCase.execute();
@@ -94,21 +98,28 @@ class UserManagementBloc
         customers,
       );
 
-      emit(state.copyWith(
-        status: UserManagementStatus.loaded,
-        statistics: statistics,
-        customers: customers,
-        topEarners: topEarners,
-        errorMessage: '',
-        hasLoadedOnce: true,
-      ));
+      emit(
+        state.copyWith(
+          status: UserManagementStatus.loaded,
+          statistics: statistics,
+          customers: customers,
+          topEarners: topEarners,
+          errorMessage: '',
+          hasLoadedOnce: true,
+        ),
+      );
     } catch (e) {
       AppLogger.error('Error loading user management: $e');
-      emit(state.copyWith(
-        status: UserManagementStatus.error,
-        errorMessage: e.toString().replaceFirst(RegExp(r'^Exception:\s*'), ''),
-        hasLoadedOnce: true,
-      ));
+      emit(
+        state.copyWith(
+          status: UserManagementStatus.error,
+          errorMessage: e.toString().replaceFirst(
+            RegExp(r'^Exception:\s*'),
+            '',
+          ),
+          hasLoadedOnce: true,
+        ),
+      );
     }
   }
 
@@ -116,11 +127,13 @@ class UserManagementBloc
     SearchCustomersRequested event,
     Emitter<UserManagementState> emit,
   ) async {
-    emit(state.copyWith(
-      searchQuery: event.query,
-      status: UserManagementStatus.loading,
-      clearSuccessMessage: true,
-    ));
+    emit(
+      state.copyWith(
+        searchQuery: event.query,
+        status: UserManagementStatus.loading,
+        clearSuccessMessage: true,
+      ),
+    );
 
     try {
       final customers = await getCustomersUseCase.execute(
@@ -129,16 +142,23 @@ class UserManagementBloc
         sortBy: state.sortBy,
       );
 
-      emit(state.copyWith(
-        status: UserManagementStatus.loaded,
-        customers: customers,
-      ));
+      emit(
+        state.copyWith(
+          status: UserManagementStatus.loaded,
+          customers: customers,
+        ),
+      );
     } catch (e) {
       AppLogger.error('Error searching customers: $e');
-      emit(state.copyWith(
-        status: UserManagementStatus.error,
-        errorMessage: e.toString().replaceFirst(RegExp(r'^Exception:\s*'), ''),
-      ));
+      emit(
+        state.copyWith(
+          status: UserManagementStatus.error,
+          errorMessage: e.toString().replaceFirst(
+            RegExp(r'^Exception:\s*'),
+            '',
+          ),
+        ),
+      );
     }
   }
 
@@ -148,11 +168,13 @@ class UserManagementBloc
   ) async {
     if (state.selectedFilter == event.filter) return;
 
-    emit(state.copyWith(
-      selectedFilter: event.filter,
-      status: UserManagementStatus.loading,
-      clearSuccessMessage: true,
-    ));
+    emit(
+      state.copyWith(
+        selectedFilter: event.filter,
+        status: UserManagementStatus.loading,
+        clearSuccessMessage: true,
+      ),
+    );
 
     try {
       final customers = await getCustomersUseCase.execute(
@@ -161,16 +183,23 @@ class UserManagementBloc
         sortBy: state.sortBy,
       );
 
-      emit(state.copyWith(
-        status: UserManagementStatus.loaded,
-        customers: customers,
-      ));
+      emit(
+        state.copyWith(
+          status: UserManagementStatus.loaded,
+          customers: customers,
+        ),
+      );
     } catch (e) {
       AppLogger.error('Error filtering customers: $e');
-      emit(state.copyWith(
-        status: UserManagementStatus.error,
-        errorMessage: e.toString().replaceFirst(RegExp(r'^Exception:\s*'), ''),
-      ));
+      emit(
+        state.copyWith(
+          status: UserManagementStatus.error,
+          errorMessage: e.toString().replaceFirst(
+            RegExp(r'^Exception:\s*'),
+            '',
+          ),
+        ),
+      );
     }
   }
 
@@ -178,11 +207,13 @@ class UserManagementBloc
     SortCustomersRequested event,
     Emitter<UserManagementState> emit,
   ) async {
-    emit(state.copyWith(
-      sortBy: event.sortBy,
-      status: UserManagementStatus.loading,
-      clearSuccessMessage: true,
-    ));
+    emit(
+      state.copyWith(
+        sortBy: event.sortBy,
+        status: UserManagementStatus.loading,
+        clearSuccessMessage: true,
+      ),
+    );
 
     try {
       final customers = await getCustomersUseCase.execute(
@@ -191,16 +222,23 @@ class UserManagementBloc
         sortBy: event.sortBy,
       );
 
-      emit(state.copyWith(
-        status: UserManagementStatus.loaded,
-        customers: customers,
-      ));
+      emit(
+        state.copyWith(
+          status: UserManagementStatus.loaded,
+          customers: customers,
+        ),
+      );
     } catch (e) {
       AppLogger.error('Error sorting customers: $e');
-      emit(state.copyWith(
-        status: UserManagementStatus.error,
-        errorMessage: e.toString().replaceFirst(RegExp(r'^Exception:\s*'), ''),
-      ));
+      emit(
+        state.copyWith(
+          status: UserManagementStatus.error,
+          errorMessage: e.toString().replaceFirst(
+            RegExp(r'^Exception:\s*'),
+            '',
+          ),
+        ),
+      );
     }
   }
 
@@ -212,18 +250,17 @@ class UserManagementBloc
       return;
     }
 
-    emit(state.copyWith(
-      topEarnersRange: event.range,
-      isLoadingTopEarners: true,
-      clearSuccessMessage: true,
-    ));
+    emit(
+      state.copyWith(
+        topEarnersRange: event.range,
+        isLoadingTopEarners: true,
+        clearSuccessMessage: true,
+      ),
+    );
 
     try {
       final topEarners = await _fetchTopEarners(event.range, state.customers);
-      emit(state.copyWith(
-        topEarners: topEarners,
-        isLoadingTopEarners: false,
-      ));
+      emit(state.copyWith(topEarners: topEarners, isLoadingTopEarners: false));
     } catch (e) {
       AppLogger.error('Error changing top earners range: $e');
       emit(state.copyWith(isLoadingTopEarners: false));
@@ -234,10 +271,12 @@ class UserManagementBloc
     ApproveCustomerRequested event,
     Emitter<UserManagementState> emit,
   ) async {
-    emit(state.copyWith(
-      status: UserManagementStatus.approving,
-      clearSuccessMessage: true,
-    ));
+    emit(
+      state.copyWith(
+        status: UserManagementStatus.approving,
+        clearSuccessMessage: true,
+      ),
+    );
 
     try {
       await approveCustomerUseCase.execute(event.customerId);
@@ -254,20 +293,27 @@ class UserManagementBloc
         customers,
       );
 
-      emit(state.copyWith(
-        status: UserManagementStatus.loaded,
-        statistics: statistics,
-        customers: customers,
-        topEarners: topEarners,
-        successMessage: 'Customer approved successfully!',
-        errorMessage: '',
-      ));
+      emit(
+        state.copyWith(
+          status: UserManagementStatus.loaded,
+          statistics: statistics,
+          customers: customers,
+          topEarners: topEarners,
+          successMessage: 'Customer approved successfully!',
+          errorMessage: '',
+        ),
+      );
     } catch (e) {
       AppLogger.error('Error approving customer: $e');
-      emit(state.copyWith(
-        status: UserManagementStatus.error,
-        errorMessage: e.toString().replaceFirst(RegExp(r'^Exception:\s*'), ''),
-      ));
+      emit(
+        state.copyWith(
+          status: UserManagementStatus.error,
+          errorMessage: e.toString().replaceFirst(
+            RegExp(r'^Exception:\s*'),
+            '',
+          ),
+        ),
+      );
     }
   }
 
@@ -275,10 +321,12 @@ class UserManagementBloc
     RejectCustomerRequested event,
     Emitter<UserManagementState> emit,
   ) async {
-    emit(state.copyWith(
-      status: UserManagementStatus.rejecting,
-      clearSuccessMessage: true,
-    ));
+    emit(
+      state.copyWith(
+        status: UserManagementStatus.rejecting,
+        clearSuccessMessage: true,
+      ),
+    );
 
     try {
       await rejectCustomerUseCase.execute(event.customerId, event.reason);
@@ -294,20 +342,27 @@ class UserManagementBloc
         customers,
       );
 
-      emit(state.copyWith(
-        status: UserManagementStatus.loaded,
-        statistics: statistics,
-        customers: customers,
-        topEarners: topEarners,
-        successMessage: 'Customer rejected successfully.',
-        errorMessage: '',
-      ));
+      emit(
+        state.copyWith(
+          status: UserManagementStatus.loaded,
+          statistics: statistics,
+          customers: customers,
+          topEarners: topEarners,
+          successMessage: 'Customer rejected successfully.',
+          errorMessage: '',
+        ),
+      );
     } catch (e) {
       AppLogger.error('Error rejecting customer: $e');
-      emit(state.copyWith(
-        status: UserManagementStatus.error,
-        errorMessage: e.toString().replaceFirst(RegExp(r'^Exception:\s*'), ''),
-      ));
+      emit(
+        state.copyWith(
+          status: UserManagementStatus.error,
+          errorMessage: e.toString().replaceFirst(
+            RegExp(r'^Exception:\s*'),
+            '',
+          ),
+        ),
+      );
     }
   }
 
@@ -327,21 +382,28 @@ class UserManagementBloc
         customers,
       );
 
-      emit(state.copyWith(
-        status: UserManagementStatus.loaded,
-        statistics: statistics,
-        customers: customers,
-        topEarners: topEarners,
-        errorMessage: '',
-        hasLoadedOnce: true,
-      ));
+      emit(
+        state.copyWith(
+          status: UserManagementStatus.loaded,
+          statistics: statistics,
+          customers: customers,
+          topEarners: topEarners,
+          errorMessage: '',
+          hasLoadedOnce: true,
+        ),
+      );
     } catch (e) {
       AppLogger.error('Error refreshing user management: $e');
-      emit(state.copyWith(
-        status: UserManagementStatus.error,
-        errorMessage: e.toString().replaceFirst(RegExp(r'^Exception:\s*'), ''),
-        hasLoadedOnce: true,
-      ));
+      emit(
+        state.copyWith(
+          status: UserManagementStatus.error,
+          errorMessage: e.toString().replaceFirst(
+            RegExp(r'^Exception:\s*'),
+            '',
+          ),
+          hasLoadedOnce: true,
+        ),
+      );
     }
   }
 
@@ -350,7 +412,9 @@ class UserManagementBloc
     Emitter<UserManagementState> emit,
   ) async {
     try {
-      final customer = await getCustomerDetailsUseCase.execute(event.customerId);
+      final customer = await getCustomerDetailsUseCase.execute(
+        event.customerId,
+      );
       emit(state.copyWith(selectedCustomer: customer));
     } catch (e) {
       AppLogger.error('Error loading customer details: $e');

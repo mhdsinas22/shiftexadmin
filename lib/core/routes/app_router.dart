@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:shiftexadmin/core/di/injection_container.dart';
 import 'package:shiftexadmin/core/routes/route_names.dart';
 import 'package:shiftexadmin/core/widgets/admin_main_shell.dart';
 import 'package:shiftexadmin/features/ads/presentation/pages/ads_page.dart';
@@ -8,6 +9,8 @@ import 'package:shiftexadmin/features/dashboard/presentation/pages/dashboard_pag
 import 'package:shiftexadmin/features/dashboard/presentation/pages/master_ledger_page.dart';
 import 'package:shiftexadmin/features/scan_pos/domain/entities/verified_pos_customer_entity.dart';
 import 'package:shiftexadmin/features/scan_pos/presentation/pages/scan_pos_page.dart';
+import 'package:shiftexadmin/features/settings/admin_access/domain/entities/admin_permission.dart';
+import 'package:shiftexadmin/features/settings/admin_access/domain/usecases/get_admin_access_overview_usecase.dart';
 import 'package:shiftexadmin/features/settings/daily_streak_settings/presentation/pages/daily_streak_audit_page.dart';
 import 'package:shiftexadmin/features/settings/points_to_cash/presentation/pages/points_to_cash_audit_page.dart';
 import 'package:shiftexadmin/features/settings/presentation/pages/settings_page.dart';
@@ -31,6 +34,31 @@ class AppRouter {
 
       if (session != null && isLoggingIn) {
         return RouteNames.dashboardRoute;
+      }
+
+      if (session != null &&
+          getIt.isRegistered<GetAdminAccessOverviewUseCase>()) {
+        final admin = getIt<GetAdminAccessOverviewUseCase>().cachedCurrentAdmin;
+        if (admin != null) {
+          if (!admin.isActive) {
+            return RouteNames.loginRoute;
+          }
+          final loc = state.matchedLocation;
+          if (loc.startsWith(RouteNames.adsRoute) &&
+              !admin.hasPermission(AdminPermission.adsManage)) {
+            return RouteNames.dashboardRoute;
+          }
+          if (loc.startsWith(RouteNames.scanPosRoute) &&
+              !admin.hasPermission(AdminPermission.posView) &&
+              !admin.hasPermission(AdminPermission.posGiveReward) &&
+              !admin.hasPermission(AdminPermission.posVerifyClaim)) {
+            return RouteNames.dashboardRoute;
+          }
+          if (loc.startsWith(RouteNames.userManagementRoute) &&
+              !admin.hasPermission(AdminPermission.usersView)) {
+            return RouteNames.dashboardRoute;
+          }
+        }
       }
 
       return null;

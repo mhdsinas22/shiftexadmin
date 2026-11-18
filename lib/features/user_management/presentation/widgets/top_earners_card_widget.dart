@@ -40,12 +40,12 @@ class TopEarnersCardWidgetState extends State<TopEarnersCardWidget> {
   }
 
   List<CustomerEntity> _resolveTopEarners() {
-    final eligible = widget.customers
-        .where((c) => c.displayTopEarnerPoints > 0)
-        .toList()
-      ..sort(
-        (a, b) => b.displayTopEarnerPoints.compareTo(a.displayTopEarnerPoints),
-      );
+    final eligible =
+        widget.customers.where((c) => c.displayTopEarnerPoints > 0).toList()
+          ..sort(
+            (a, b) =>
+                b.displayTopEarnerPoints.compareTo(a.displayTopEarnerPoints),
+          );
     return eligible.take(3).toList();
   }
 
@@ -58,10 +58,7 @@ class TopEarnersCardWidgetState extends State<TopEarnersCardWidget> {
       decoration: BoxDecoration(
         color: AppColors.pureWhite,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(0xFFF1F5F9),
-          width: 1.2,
-        ),
+        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x060F172A),
@@ -157,10 +154,7 @@ class TopEarnersCardWidgetState extends State<TopEarnersCardWidget> {
           else
             ...List.generate(topList.length, (index) {
               final customer = topList[index];
-              return _buildEarnerRow(
-                rank: index + 1,
-                customer: customer,
-              );
+              return _buildEarnerRow(rank: index + 1, customer: customer);
             }),
         ],
       ),
@@ -238,10 +232,7 @@ class TopEarnersCardWidgetState extends State<TopEarnersCardWidget> {
             Container(
               width: 28,
               height: 28,
-              decoration: BoxDecoration(
-                color: rankBg,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: rankBg, shape: BoxShape.circle),
               child: Center(
                 child: Text(
                   '#$rank',

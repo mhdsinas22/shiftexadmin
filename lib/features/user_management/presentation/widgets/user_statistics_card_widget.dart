@@ -25,10 +25,7 @@ class UserStatisticsCardWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.pureWhite,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFF1F5F9),
-          width: 1.2,
-        ),
+        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x060F172A),
@@ -53,17 +50,9 @@ class UserStatisticsCardWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          AppTexts.bold(
-            value,
-            fontSize: 20,
-            color: valueColor,
-          ),
+          AppTexts.bold(value, fontSize: 20, color: valueColor),
           const SizedBox(height: 4),
-          AppTexts.regular(
-            subtitle,
-            fontSize: 11,
-            color: AppColors.textHint,
-          ),
+          AppTexts.regular(subtitle, fontSize: 11, color: AppColors.textHint),
         ],
       ),
     );

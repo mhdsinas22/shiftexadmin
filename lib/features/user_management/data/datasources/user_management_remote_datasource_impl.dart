@@ -88,7 +88,9 @@ class UserManagementRemoteDatasourceImpl
       dynamic query = supabaseClient.from('profiles').select('*');
 
       // Filter by approval_status
-      if (status != null && status.isNotEmpty && status.toLowerCase() != 'all') {
+      if (status != null &&
+          status.isNotEmpty &&
+          status.toLowerCase() != 'all') {
         final cleanStatus = status.toLowerCase();
         if (cleanStatus == 'verified' || cleanStatus == 'approved') {
           query = query.eq('approval_status', 'approved');
@@ -153,10 +155,7 @@ class UserManagementRemoteDatasourceImpl
     try {
       final response = await supabaseClient.rpc(
         'get_user_management_top_earners',
-        params: {
-          'p_range': cleanRange,
-          'p_limit': limit,
-        },
+        params: {'p_range': cleanRange, 'p_limit': limit},
       );
 
       if (response is List) {
@@ -174,12 +173,11 @@ class UserManagementRemoteDatasourceImpl
     // Fallback: compute top earners from approved profiles + customer_wallets
     try {
       final customers = await getCustomers(status: 'approved', limit: 50);
-      final withPoints = customers
-          .where((c) => c.displayTopEarnerPoints > 0)
-          .toList()
-        ..sort(
-          (a, b) => b.displayTopEarnerPoints.compareTo(a.displayTopEarnerPoints),
-        );
+      final withPoints =
+          customers.where((c) => c.displayTopEarnerPoints > 0).toList()..sort(
+            (a, b) =>
+                b.displayTopEarnerPoints.compareTo(a.displayTopEarnerPoints),
+          );
       return withPoints.take(limit).toList();
     } catch (e) {
       AppLogger.error('Failed to get top earners fallback: $e');
@@ -200,8 +198,7 @@ class UserManagementRemoteDatasourceImpl
       int restricted = 0;
 
       for (final row in response) {
-        final status =
-            (row['approval_status'] as String? ?? '').toLowerCase();
+        final status = (row['approval_status'] as String? ?? '').toLowerCase();
         registered++;
         if (status == 'pending') {
           pending++;
@@ -271,13 +268,16 @@ class UserManagementRemoteDatasourceImpl
         );
       }
 
-      await supabaseClient.from('profiles').update({
-        'approval_status': 'approved',
-        'approved_by': adminUser.id,
-        'approved_at': DateTime.now().toUtc().toIso8601String(),
-        'rejection_reason': null,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }).eq('id', customerId);
+      await supabaseClient
+          .from('profiles')
+          .update({
+            'approval_status': 'approved',
+            'approved_by': adminUser.id,
+            'approved_at': DateTime.now().toUtc().toIso8601String(),
+            'rejection_reason': null,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', customerId);
 
       AppLogger.info('Customer $customerId approved via direct update');
     }
@@ -297,10 +297,7 @@ class UserManagementRemoteDatasourceImpl
     try {
       await supabaseClient.rpc(
         'reject_customer',
-        params: {
-          'customer_id': customerId,
-          'reason': reason.trim(),
-        },
+        params: {'customer_id': customerId, 'reason': reason.trim()},
       );
       AppLogger.info('Customer $customerId rejected via RPC');
     } catch (rpcError) {
@@ -318,13 +315,16 @@ class UserManagementRemoteDatasourceImpl
         );
       }
 
-      await supabaseClient.from('profiles').update({
-        'approval_status': 'rejected',
-        'approved_by': adminUser.id,
-        'approved_at': DateTime.now().toUtc().toIso8601String(),
-        'rejection_reason': reason.trim(),
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }).eq('id', customerId);
+      await supabaseClient
+          .from('profiles')
+          .update({
+            'approval_status': 'rejected',
+            'approved_by': adminUser.id,
+            'approved_at': DateTime.now().toUtc().toIso8601String(),
+            'rejection_reason': reason.trim(),
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', customerId);
 
       AppLogger.info('Customer $customerId rejected via direct update');
     }

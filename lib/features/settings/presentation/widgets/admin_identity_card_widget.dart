@@ -1,16 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:shiftexadmin/core/constants/app_colors.dart';
+import 'package:shiftexadmin/features/settings/admin_access/domain/entities/admin_operator_entity.dart';
 
 class AdminIdentityCardWidget extends StatelessWidget {
   final String email;
+  final AdminOperatorEntity? currentAdmin;
 
   const AdminIdentityCardWidget({
     super.key,
     required this.email,
+    this.currentAdmin,
   });
 
+  String get _resolvedEmail {
+    if (currentAdmin != null && currentAdmin!.email.trim().isNotEmpty) {
+      return currentAdmin!.email.trim();
+    }
+    return email;
+  }
+
   String get _displayName {
-    final prefix = email.split('@').first;
+    if (currentAdmin != null && currentAdmin!.fullName.trim().isNotEmpty) {
+      return currentAdmin!.fullName.trim();
+    }
+    final prefix = _resolvedEmail.split('@').first;
     if (prefix.isEmpty) return 'ShiftEx Admin';
     final parts = prefix
         .split(RegExp(r'[._-]+'))
@@ -20,7 +33,19 @@ class AdminIdentityCardWidget extends StatelessWidget {
     return parts.isEmpty ? 'ShiftEx Admin' : parts.join(' ');
   }
 
+  String get _roleBadge {
+    if (currentAdmin != null) {
+      return currentAdmin!.isKeyMaster
+          ? 'Owner'
+          : currentAdmin!.role.displayLabel;
+    }
+    return 'Owner';
+  }
+
   String get _initials {
+    if (currentAdmin != null) {
+      return currentAdmin!.initials;
+    }
     final words = _displayName.split(' ').where((w) => w.isNotEmpty).toList();
     if (words.length >= 2) {
       return '${words[0][0]}${words[1][0]}'.toUpperCase();
@@ -38,10 +63,7 @@ class AdminIdentityCardWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.pureWhite,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(0xFFF1F5F9),
-          width: 1.2,
-        ),
+        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x060F172A),
@@ -84,7 +106,10 @@ class AdminIdentityCardWidget extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: AppColors.eifGreen,
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.pureWhite, width: 2),
+                        border: Border.all(
+                          color: AppColors.pureWhite,
+                          width: 2,
+                        ),
                       ),
                       child: const Icon(
                         Icons.check,
@@ -125,9 +150,9 @@ class AdminIdentityCardWidget extends StatelessWidget {
                             color: const Color(0xFFEDE9FE),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Text(
-                            'Admin',
-                            style: TextStyle(
+                          child: Text(
+                            _roleBadge,
+                            style: const TextStyle(
                               fontFamily: 'Inter',
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
@@ -139,7 +164,7 @@ class AdminIdentityCardWidget extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      email,
+                      _resolvedEmail,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -163,17 +188,19 @@ class AdminIdentityCardWidget extends StatelessWidget {
             child: Row(
               children: [
                 const Icon(
-                  Icons.verified_user_outlined,
+                  Icons.vpn_key_outlined,
                   size: 15,
                   color: AppColors.linkBlue,
                 ),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Supabase Auth & admin_users • Verified',
+                    currentAdmin != null
+                        ? 'Hardware Key HSM • ${currentAdmin!.terminalAssignment} • Validated'
+                        : 'Supabase Auth & admin_users • Verified',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 11.5,
                       fontWeight: FontWeight.w500,
