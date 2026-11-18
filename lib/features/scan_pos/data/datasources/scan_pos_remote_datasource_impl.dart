@@ -21,7 +21,7 @@ class ScanPosRemoteDataSourceImpl implements ScanPosRemoteDataSource {
     final msg = e.message;
     final clean = msg.replaceFirst(
       RegExp(
-        r'^(UNAUTHORIZED|INVALID_QR|WRONG_QR_MODE|QR_REVOKED|QR_ALREADY_USED|QR_EXPIRED|CUSTOMER_NOT_FOUND|CUSTOMER_NOT_APPROVED|DUPLICATE_TRANSACTION|INVALID_AMOUNT|INVALID_BILL|INSUFFICIENT_BALANCE|INVALID_CUSTOMER|WALLET_NOT_FOUND|WALLET_VERIFICATION_FAILED|LEDGER_VERIFICATION_FAILED|ALLOCATION_VERIFICATION_FAILED):\s*',
+        r'^(UNAUTHORIZED|INVALID_QR|WRONG_QR_MODE|QR_REVOKED|QR_ALREADY_USED|QR_EXPIRED|CUSTOMER_NOT_FOUND|CUSTOMER_NOT_APPROVED|DUPLICATE_TRANSACTION|INVALID_AMOUNT|INVALID_BILL|INSUFFICIENT_BALANCE|INVALID_CUSTOMER|WALLET_NOT_FOUND|WALLET_VERIFICATION_FAILED|LEDGER_VERIFICATION_FAILED|ALLOCATION_VERIFICATION_FAILED|INVALID_ACTION|INVALID_REASON):\s*',
       ),
       '',
     );
@@ -200,6 +200,42 @@ class ScanPosRemoteDataSourceImpl implements ScanPosRemoteDataSource {
       throw Exception(_mapPostgrestError(e));
     } catch (e) {
       AppLogger.error('Error redeeming claim QR: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<PosClaimRejectOrFlagResultModel> rejectOrFlagClaimQr({
+    required String tokenId,
+    required String action,
+    required String reason,
+    required String branchName,
+  }) async {
+    try {
+      _ensureSignedIn();
+      final response = await supabaseClient.rpc(
+        'reject_or_flag_customer_claim_qr',
+        params: {
+          'p_token_id': tokenId,
+          'p_action': action.trim().toLowerCase(),
+          'p_reason': reason.trim(),
+          'p_branch_name': branchName.trim().isNotEmpty
+              ? branchName.trim()
+              : 'Counter #1 POS',
+        },
+      );
+
+      if (response is Map) {
+        return PosClaimRejectOrFlagResultModel.fromJson(
+          Map<String, dynamic>.from(response),
+        );
+      }
+      throw Exception('Invalid claim rejection/flag response from server.');
+    } on PostgrestException catch (e) {
+      AppLogger.error('Claim reject/flag failed: ${e.message}');
+      throw Exception(_mapPostgrestError(e));
+    } catch (e) {
+      AppLogger.error('Error rejecting or flagging claim QR: $e');
       rethrow;
     }
   }

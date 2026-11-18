@@ -93,3 +93,34 @@ class PosClaimRedemptionResultEntity {
     required this.redeemedAt,
   });
 }
+
+class PosClaimRejectOrFlagResultEntity {
+  final bool success;
+  final String action;
+  final String auditStatus;
+  final String tokenId;
+  final String? claimId;
+  final String claimReference;
+  final String reason;
+  final String branchName;
+  final int availablePoints;
+  final int reservedPoints;
+  final DateTime processedAt;
+
+  const PosClaimRejectOrFlagResultEntity({
+    this.success = true,
+    required this.action,
+    required this.auditStatus,
+    required this.tokenId,
+    this.claimId,
+    required this.claimReference,
+    required this.reason,
+    this.branchName = 'Counter #1 POS',
+    this.availablePoints = 0,
+    this.reservedPoints = 0,
+    required this.processedAt,
+  });
+
+  bool get isFlagged =>
+      action.toLowerCase() == 'flag' || auditStatus.toLowerCase() == 'flagged';
+}

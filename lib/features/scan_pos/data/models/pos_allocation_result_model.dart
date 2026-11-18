@@ -154,3 +154,37 @@ class PosClaimRedemptionResultModel extends PosClaimRedemptionResultEntity {
     );
   }
 }
+
+class PosClaimRejectOrFlagResultModel extends PosClaimRejectOrFlagResultEntity {
+  const PosClaimRejectOrFlagResultModel({
+    super.success,
+    required super.action,
+    required super.auditStatus,
+    required super.tokenId,
+    super.claimId,
+    required super.claimReference,
+    required super.reason,
+    super.branchName,
+    super.availablePoints,
+    super.reservedPoints,
+    required super.processedAt,
+  });
+
+  factory PosClaimRejectOrFlagResultModel.fromJson(Map<String, dynamic> json) {
+    return PosClaimRejectOrFlagResultModel(
+      success: json['success'] as bool? ?? true,
+      action: json['action']?.toString() ?? 'reject',
+      auditStatus: json['audit_status']?.toString() ?? 'rejected',
+      tokenId: json['token_id']?.toString() ?? '',
+      claimId: json['claim_id']?.toString(),
+      claimReference: json['claim_reference']?.toString() ?? 'CLM-0000',
+      reason: json['reason']?.toString() ?? '',
+      branchName: json['branch_name']?.toString() ?? 'Counter #1 POS',
+      availablePoints: (json['available_points'] as num?)?.toInt() ?? 0,
+      reservedPoints: (json['reserved_points'] as num?)?.toInt() ?? 0,
+      processedAt: json['processed_at'] != null
+          ? DateTime.tryParse(json['processed_at'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+    );
+  }
+}

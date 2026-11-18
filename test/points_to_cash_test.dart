@@ -304,6 +304,27 @@ class FakeSyncedScanPosRepository implements ScanPosRepository {
   }
 
   @override
+  Future<PosClaimRejectOrFlagResultEntity> rejectOrFlagClaimQr({
+    required String tokenId,
+    required String action,
+    required String reason,
+    required String branchName,
+  }) async {
+    return PosClaimRejectOrFlagResultEntity(
+      success: true,
+      action: action,
+      auditStatus: action == 'flag' ? 'flagged' : 'rejected',
+      tokenId: tokenId,
+      claimReference: 'CLM-8812',
+      reason: reason,
+      branchName: branchName,
+      availablePoints: walletInstant,
+      reservedPoints: 0,
+      processedAt: DateTime.now(),
+    );
+  }
+
+  @override
   Future<List<PosTransactionEntity>> getRecentTransactions({
     int limit = 15,
     int offset = 0,

@@ -75,6 +75,21 @@ class ScanPosRepositoryImpl implements ScanPosRepository {
   }
 
   @override
+  Future<PosClaimRejectOrFlagResultEntity> rejectOrFlagClaimQr({
+    required String tokenId,
+    required String action,
+    required String reason,
+    required String branchName,
+  }) {
+    return remoteDataSource.rejectOrFlagClaimQr(
+      tokenId: tokenId,
+      action: action,
+      reason: reason,
+      branchName: branchName,
+    );
+  }
+
+  @override
   Future<List<PosTransactionEntity>> getRecentTransactions({
     int limit = 15,
     int offset = 0,

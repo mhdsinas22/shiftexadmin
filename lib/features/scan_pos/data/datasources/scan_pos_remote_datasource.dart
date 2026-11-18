@@ -38,6 +38,13 @@ abstract class ScanPosRemoteDataSource {
     required String idempotencyKey,
   });
 
+  Future<PosClaimRejectOrFlagResultModel> rejectOrFlagClaimQr({
+    required String tokenId,
+    required String action,
+    required String reason,
+    required String branchName,
+  });
+
   Future<List<PosTransactionModel>> getRecentTransactions({
     int limit = 15,
     int offset = 0,

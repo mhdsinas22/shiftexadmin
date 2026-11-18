@@ -17,6 +17,10 @@ class RefreshSelectedCustomerWalletRequested extends ScanPosEvent {
   const RefreshSelectedCustomerWalletRequested();
 }
 
+class RefreshClaimValidationRequested extends ScanPosEvent {
+  const RefreshClaimValidationRequested();
+}
+
 class CentralRateConfigUpdatedEvent extends ScanPosEvent {
   final PointsToCashConfigEntity config;
   const CentralRateConfigUpdatedEvent(this.config);
@@ -78,6 +82,20 @@ class ConfirmAllocatePointsRequested extends ScanPosEvent {
 
 class ConfirmRedeemClaimRequested extends ScanPosEvent {
   const ConfirmRedeemClaimRequested();
+}
+
+class RejectOrFlagClaimQrRequested extends ScanPosEvent {
+  final String action;
+  final String reason;
+
+  const RejectOrFlagClaimQrRequested({
+    required this.action,
+    required this.reason,
+  });
+}
+
+class ClaimTokenExpiredEvent extends ScanPosEvent {
+  const ClaimTokenExpiredEvent();
 }
 
 class LoadRecentTransactionsRequested extends ScanPosEvent {

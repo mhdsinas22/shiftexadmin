@@ -7,6 +7,7 @@ import 'package:shiftexadmin/features/scan_pos/domain/usecases/allocate_pos_poin
 import 'package:shiftexadmin/features/scan_pos/domain/usecases/get_pos_customer_wallet_usecase.dart';
 import 'package:shiftexadmin/features/scan_pos/domain/usecases/get_pos_recent_transactions_usecase.dart';
 import 'package:shiftexadmin/features/scan_pos/domain/usecases/redeem_customer_claim_qr_usecase.dart';
+import 'package:shiftexadmin/features/scan_pos/domain/usecases/reject_or_flag_claim_qr_usecase.dart';
 import 'package:shiftexadmin/features/scan_pos/domain/usecases/search_pos_customers_usecase.dart';
 import 'package:shiftexadmin/features/scan_pos/domain/usecases/verify_customer_qr_usecase.dart';
 import 'package:shiftexadmin/features/scan_pos/presentation/bloc/scan_pos_bloc.dart';
@@ -50,6 +51,11 @@ void initScanPosDependencies(GetIt sl) {
       () => RedeemCustomerClaimQrUseCase(repository: sl()),
     );
   }
+  if (!sl.isRegistered<RejectOrFlagClaimQrUseCase>()) {
+    sl.registerLazySingleton(
+      () => RejectOrFlagClaimQrUseCase(sl()),
+    );
+  }
   if (!sl.isRegistered<GetPosRecentTransactionsUseCase>()) {
     sl.registerLazySingleton(
       () => GetPosRecentTransactionsUseCase(repository: sl()),
@@ -64,6 +70,7 @@ void initScanPosDependencies(GetIt sl) {
         getPosCustomerWalletUseCase: sl(),
         allocatePosPointsUseCase: sl(),
         redeemCustomerClaimQrUseCase: sl(),
+        rejectOrFlagClaimQrUseCase: sl<RejectOrFlagClaimQrUseCase>(),
         getPosRecentTransactionsUseCase: sl(),
         getPointsToCashConfigUseCase: sl<GetPointsToCashConfigUseCase>(),
       ),

@@ -10,19 +10,23 @@ import 'package:shiftexadmin/features/scan_pos/domain/usecases/allocate_pos_poin
 import 'package:shiftexadmin/features/scan_pos/domain/usecases/get_pos_customer_wallet_usecase.dart';
 import 'package:shiftexadmin/features/scan_pos/domain/usecases/get_pos_recent_transactions_usecase.dart';
 import 'package:shiftexadmin/features/scan_pos/domain/usecases/redeem_customer_claim_qr_usecase.dart';
+import 'package:shiftexadmin/features/scan_pos/domain/usecases/reject_or_flag_claim_qr_usecase.dart';
 import 'package:shiftexadmin/features/scan_pos/domain/usecases/search_pos_customers_usecase.dart';
 import 'package:shiftexadmin/features/scan_pos/domain/usecases/verify_customer_qr_usecase.dart';
 import 'package:shiftexadmin/features/scan_pos/presentation/bloc/scan_pos_bloc.dart';
 import 'package:shiftexadmin/features/scan_pos/presentation/bloc/scan_pos_event.dart';
 import 'package:shiftexadmin/features/scan_pos/presentation/bloc/scan_pos_state.dart';
 import 'package:shiftexadmin/features/scan_pos/presentation/pages/scan_pos_page.dart';
+import 'package:shiftexadmin/features/scan_pos/presentation/widgets/claim_audit_checks_widget.dart';
 import 'package:shiftexadmin/features/scan_pos/presentation/widgets/recent_scan_history.dart';
+import 'package:shiftexadmin/features/scan_pos/presentation/widgets/verify_claim_card_widget.dart';
 
 class FakeScanPosRepository implements ScanPosRepository {
   int verifyCallCount = 0;
   int allocateCallCount = 0;
   int getWalletCallCount = 0;
   int redeemCallCount = 0;
+  int rejectOrFlagCallCount = 0;
   int searchCallCount = 0;
   int historyCallCount = 0;
 
@@ -31,10 +35,13 @@ class FakeScanPosRepository implements ScanPosRepository {
   String? lastIdempotencyKey;
   int? lastInstantPoints;
   int? lastFuturePoints;
+  String? lastRejectOrFlagAction;
+  String? lastRejectOrFlagReason;
 
   Object? verifyError;
   Object? allocateError;
   Object? redeemError;
+  Object? rejectOrFlagError;
   Object? historyError;
 
   Completer<PosAllocationResultEntity>? pendingAllocateCompleter;
@@ -59,22 +66,45 @@ class FakeScanPosRepository implements ScanPosRepository {
     verificationMethod: 'qr',
   );
 
-  VerifiedPosCustomerEntity sampleClaimCustomer = const VerifiedPosCustomerEntity(
+  VerifiedPosCustomerEntity sampleClaimCustomer = VerifiedPosCustomerEntity(
     customerId: 'cust-2',
     fullName: 'Arjun S.',
     email: 'arjun@shiftex.in',
     mobileNumber: '+91 91234 56789',
     approvalStatus: 'approved',
     membershipId: 'SHFT-4455-AS',
+    membershipTier: 'Gold Tier',
     availablePoints: 1200,
+    reservedPoints: 200,
     lockedPoints: 300,
+    pointsPerRupee: 10,
     pointsToInrRate: 0.10,
     tokenId: 'tok-clm-1',
     tokenCode: 'CLM-8812',
     qrPayload: 'SHIIFTEX:CLAIM:V1:CLM-8812:AABBCCDD1122',
     tokenPurpose: 'claim',
     allowDeduction: true,
+    tokenCreatedAt: DateTime.now().subtract(const Duration(minutes: 1)),
+    tokenExpiresAt: DateTime.now().add(const Duration(minutes: 4)),
     verificationMethod: 'qr',
+    claimId: 'claim-uuid-8812',
+    claimReference: 'CLM-8812',
+    claimStatus: 'pending',
+    claimAuditStatus: 'verified',
+    claimPoints: 200,
+    claimDiscountAmount: 20.0,
+    rewardName: 'Instant POS Bill Discount',
+    rewardCategory: 'POS Bill Discount',
+    merchantName: 'ShiftEx Partner Store',
+    orderReference: 'Bill #49022',
+    auditChecks: const ClaimAuditChecksEntity(
+      tokenSignatureValid: true,
+      claimNotExpired: true,
+      singleUsePassed: true,
+      replayProtectionPassed: true,
+      customerEligible: true,
+      balanceReservationValid: true,
+    ),
   );
 
   List<PosTransactionEntity> storedHistory = [
@@ -142,6 +172,9 @@ class FakeScanPosRepository implements ScanPosRepository {
     required String customerId,
   }) async {
     getWalletCallCount++;
+    if (customerId == sampleClaimCustomer.customerId) {
+      return sampleClaimCustomer;
+    }
     return sampleCustomer;
   }
 
@@ -215,6 +248,7 @@ class FakeScanPosRepository implements ScanPosRepository {
     final updatedAvailable = sampleClaimCustomer.availablePoints - redeemPoints;
     sampleClaimCustomer = sampleClaimCustomer.copyWith(
       availablePoints: updatedAvailable,
+      reservedPoints: 0,
       lifetimeRedeemedPoints:
           sampleClaimCustomer.lifetimeRedeemedPoints + redeemPoints,
     );
@@ -234,6 +268,37 @@ class FakeScanPosRepository implements ScanPosRepository {
       lifetimeRedeemedPoints: sampleClaimCustomer.lifetimeRedeemedPoints,
       transactionId: 'tx-redeem-1',
       redeemedAt: DateTime.now(),
+    );
+  }
+
+  @override
+  Future<PosClaimRejectOrFlagResultEntity> rejectOrFlagClaimQr({
+    required String tokenId,
+    required String action,
+    required String reason,
+    required String branchName,
+  }) async {
+    rejectOrFlagCallCount++;
+    lastRejectOrFlagAction = action;
+    lastRejectOrFlagReason = reason;
+    if (rejectOrFlagError != null) throw rejectOrFlagError!;
+
+    sampleClaimCustomer = sampleClaimCustomer.copyWith(
+      reservedPoints: 0,
+    );
+
+    return PosClaimRejectOrFlagResultEntity(
+      success: true,
+      action: action,
+      auditStatus: action == 'flag' ? 'flagged' : 'rejected',
+      tokenId: tokenId,
+      claimId: sampleClaimCustomer.claimId,
+      claimReference: 'CLM-8812',
+      reason: reason,
+      branchName: branchName,
+      availablePoints: sampleClaimCustomer.availablePoints,
+      reservedPoints: 0,
+      processedAt: DateTime.now(),
     );
   }
 
@@ -259,6 +324,7 @@ ScanPosBloc _buildBloc(FakeScanPosRepository repo) {
     getPosCustomerWalletUseCase: GetPosCustomerWalletUseCase(repository: repo),
     allocatePosPointsUseCase: AllocatePosPointsUseCase(repository: repo),
     redeemCustomerClaimQrUseCase: RedeemCustomerClaimQrUseCase(repository: repo),
+    rejectOrFlagClaimQrUseCase: RejectOrFlagClaimQrUseCase(repo),
     getPosRecentTransactionsUseCase:
         GetPosRecentTransactionsUseCase(repository: repo),
   );
@@ -517,28 +583,151 @@ void main() {
       expect(bloc.state.status, ScanPosStatus.success);
     });
 
-    test('Verify Claim mode redeems claim QR and updates available balance', () async {
+    test('Verify Claim mode loads claim details, pre-fills claim points & bill #, redeems claim QR, and refreshes customer wallet', () async {
       bloc.add(const ScanPosModeChanged(ScanPosMode.verifyClaim));
       await Future<void>.delayed(const Duration(milliseconds: 20));
       bloc.add(const ManualQrSubmittedEvent('CLM-8812'));
       await Future<void>.delayed(const Duration(milliseconds: 40));
 
       expect(bloc.state.mode, ScanPosMode.verifyClaim);
+      expect(bloc.state.verifyClaimStatus, VerifyClaimStatus.claimLoaded);
       expect(bloc.state.customer?.hasClaimToken, isTrue);
-
-      bloc.add(const RedeemPointsChanged('200'));
-      bloc.add(const BillNumberChanged('Bill #49022'));
-      await Future<void>.delayed(const Duration(milliseconds: 20));
+      // Pre-filled from claim entity without deducting points on scan
+      expect(bloc.state.redeemPoints, 200);
+      expect(bloc.state.redeemInr, 20.0);
+      expect(bloc.state.billNumberInput, 'Bill #49022');
+      expect(bloc.state.customer?.auditChecks.allChecksPassed, isTrue);
       expect(bloc.state.canRedeemClaim, isTrue);
+      expect(repo.redeemCallCount, 0);
 
       bloc.add(const ConfirmRedeemClaimRequested());
       await Future<void>.delayed(const Duration(milliseconds: 40));
 
       expect(repo.redeemCallCount, 1);
+      expect(repo.getWalletCallCount, 1);
       expect(bloc.state.status, ScanPosStatus.success);
+      expect(bloc.state.verifyClaimStatus, VerifyClaimStatus.redeemed);
       expect(bloc.state.customer, isNull);
       expect(bloc.state.lastClaimResult?.availablePoints, 1000);
       expect(bloc.state.lastClaimResult?.redeemedPoints, 200);
+    });
+
+    test('Verify Claim mode handles expired, already redeemed, wrong QR mode, and invalid QR errors cleanly', () async {
+      bloc.add(const ScanPosModeChanged(ScanPosMode.verifyClaim));
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+
+      // 1. Expired claim QR
+      repo.verifyError = Exception('CLAIM_EXPIRED: Claim QR has expired.');
+      bloc.add(const ManualQrSubmittedEvent('CLM-EXP-1'));
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      expect(bloc.state.status, ScanPosStatus.error);
+      expect(bloc.state.verifyClaimStatus, VerifyClaimStatus.expired);
+      expect(bloc.state.errorMessage, contains('expired'));
+
+      // 2. Already redeemed claim QR
+      repo.verifyError =
+          Exception('CLAIM_ALREADY_REDEEMED: Claim QR has already been redeemed.');
+      bloc.add(const ManualQrSubmittedEvent('CLM-USED-1'));
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      expect(bloc.state.status, ScanPosStatus.error);
+      expect(bloc.state.verifyClaimStatus, VerifyClaimStatus.invalid);
+      expect(bloc.state.errorMessage, contains('already been redeemed'));
+
+      // 3. Wrong QR mode (Member accrual QR scanned in Verify Claim mode)
+      repo.verifyError = Exception(
+        'WRONG_QR_MODE: This is a Personal Member QR for earning points. Switch to Give Reward mode.',
+      );
+      bloc.add(const ManualQrSubmittedEvent('ACC-1122-3344'));
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      expect(bloc.state.status, ScanPosStatus.error);
+      expect(bloc.state.verifyClaimStatus, VerifyClaimStatus.invalid);
+      expect(bloc.state.errorMessage, contains('Personal Member QR'));
+
+      // 4. Token expiry mid-session transitions to VerifyClaimStatus.expired
+      repo.verifyError = null;
+      bloc.add(const ManualQrSubmittedEvent('CLM-8812'));
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      expect(bloc.state.verifyClaimStatus, VerifyClaimStatus.claimLoaded);
+
+      bloc.add(const ClaimTokenExpiredEvent());
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(bloc.state.verifyClaimStatus, VerifyClaimStatus.expired);
+      expect(bloc.state.status, ScanPosStatus.error);
+    });
+
+    test('Verify Claim mode blocks redemption when backend audit checks fail or balance is insufficient', () async {
+      repo.sampleClaimCustomer = repo.sampleClaimCustomer.copyWith(
+        auditChecks: const ClaimAuditChecksEntity(
+          tokenSignatureValid: false,
+          claimNotExpired: true,
+          singleUsePassed: true,
+          replayProtectionPassed: true,
+          customerEligible: true,
+          balanceReservationValid: true,
+        ),
+      );
+
+      bloc.add(const ScanPosModeChanged(ScanPosMode.verifyClaim));
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      bloc.add(const ManualQrSubmittedEvent('CLM-8812'));
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+
+      expect(bloc.state.customer?.auditChecks.allChecksPassed, isFalse);
+      expect(bloc.state.canRedeemClaim, isFalse);
+    });
+
+    test('RejectOrFlagClaimQrRequested rejects or flags a claim token without deducting points', () async {
+      bloc.add(const ScanPosModeChanged(ScanPosMode.verifyClaim));
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      bloc.add(const ManualQrSubmittedEvent('CLM-8812'));
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+
+      // Reject claim
+      bloc.add(
+        const RejectOrFlagClaimQrRequested(
+          action: 'reject',
+          reason: 'Customer cancelled discount at POS counter',
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+
+      expect(repo.rejectOrFlagCallCount, 1);
+      expect(repo.lastRejectOrFlagAction, 'reject');
+      expect(bloc.state.verifyClaimStatus, VerifyClaimStatus.rejected);
+      expect(bloc.state.lastRejectOrFlagResult?.availablePoints, 1200);
+      expect(bloc.state.lastRejectOrFlagResult?.reservedPoints, 0);
+      expect(bloc.state.customer, isNull);
+      expect(repo.redeemCallCount, 0);
+
+      // Re-scan a fresh claim and flag suspicious activity
+      bloc.add(const ManualQrSubmittedEvent('CLM-8812'));
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+
+      bloc.add(
+        const RejectOrFlagClaimQrRequested(
+          action: 'flag',
+          reason: 'Screenshot of another member QR presented',
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+
+      expect(repo.rejectOrFlagCallCount, 2);
+      expect(repo.lastRejectOrFlagAction, 'flag');
+      expect(bloc.state.verifyClaimStatus, VerifyClaimStatus.flagged);
+      expect(bloc.state.lastRejectOrFlagResult?.auditStatus, 'flagged');
+    });
+
+    test('RefreshClaimValidationRequested re-queries backend for live claim state', () async {
+      bloc.add(const ScanPosModeChanged(ScanPosMode.verifyClaim));
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      bloc.add(const ManualQrSubmittedEvent('CLM-8812'));
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      expect(repo.verifyCallCount, 1);
+
+      bloc.add(const RefreshClaimValidationRequested());
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      expect(repo.verifyCallCount, 2);
+      expect(bloc.state.verifyClaimStatus, VerifyClaimStatus.claimLoaded);
     });
 
     test('Mode switch clears previous customer so claim and accrual QRs stay strictly separated', () async {
@@ -661,8 +850,8 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Switches to Verify Claim UI and displays claim redemption fields', (tester) async {
-      await pumpPosView(tester, screenSize: const Size(390, 844));
+    testWidgets('Switches to Verify Claim UI and displays claim verification card, audit checks, and actions on 390px and 320px phones without overflow', (tester) async {
+      await pumpPosView(tester, screenSize: const Size(390, 1200));
       await tester.runAsync(() async {
         bloc.add(const ScanPosModeChanged(ScanPosMode.verifyClaim));
         await Future<void>.delayed(const Duration(milliseconds: 20));
@@ -672,8 +861,28 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
 
+      expect(find.byType(VerifyClaimCardWidget), findsOneWidget);
+      expect(find.byType(ClaimAuditChecksWidget), findsOneWidget);
       expect(find.text('Arjun S.'), findsOneWidget);
-      expect(find.text('Claim Redemption Verification'), findsOneWidget);
+      expect(find.text('CLM-8812'), findsWidgets);
+      expect(find.text('Instant POS Bill Discount'), findsOneWidget);
+      expect(find.textContaining('ShiftEx Partner Store'), findsWidgets);
+      expect(
+        find.text('Security & Cryptographic Audit Checks'),
+        findsOneWidget,
+      );
+      expect(find.text('Token signature valid'), findsOneWidget);
+      expect(
+        find.text('Confirm Redemption & Hand Over (₹20.00)'),
+        findsOneWidget,
+      );
+      expect(find.text('Reject or Flag Token'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      // Compact 320px viewport check
+      await pumpPosView(tester, screenSize: const Size(320, 900));
+      expect(find.text('Arjun S.'), findsOneWidget);
+      expect(find.text('Reject or Flag Token'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 

@@ -15,6 +15,7 @@ import 'package:shiftexadmin/features/scan_pos/presentation/widgets/points_alloc
 import 'package:shiftexadmin/features/scan_pos/presentation/widgets/pos_camera_scanner.dart';
 import 'package:shiftexadmin/features/scan_pos/presentation/widgets/pos_customer_search_sheet.dart';
 import 'package:shiftexadmin/features/scan_pos/presentation/widgets/recent_scan_history.dart';
+import 'package:shiftexadmin/features/scan_pos/presentation/widgets/reject_or_flag_claim_dialog_widget.dart';
 import 'package:shiftexadmin/features/scan_pos/presentation/widgets/scan_pos_header_widget.dart';
 import 'package:shiftexadmin/features/scan_pos/presentation/widgets/scan_pos_prompt_card.dart';
 import 'package:shiftexadmin/features/scan_pos/presentation/widgets/scan_pos_shimmer_widget.dart';
@@ -161,6 +162,28 @@ class _ScanPosViewState extends State<ScanPosView> {
       if (mounted) {
         setState(() => _isConfirmDialogOpen = false);
       }
+    }
+  }
+
+  Future<void> _openRejectOrFlagDialog(
+    BuildContext context,
+    ScanPosState state,
+  ) async {
+    final customer = state.customer;
+    if (customer == null) return;
+    final bloc = context.read<ScanPosBloc>();
+    final result = await RejectOrFlagClaimDialogWidget.show(
+      context,
+      claimReference: customer.displayClaimReference,
+      customerName: customer.fullName,
+    );
+    if (result != null && context.mounted) {
+      bloc.add(
+        RejectOrFlagClaimQrRequested(
+          action: result.action,
+          reason: result.reason,
+        ),
+      );
     }
   }
 
@@ -317,6 +340,17 @@ class _ScanPosViewState extends State<ScanPosView> {
                                     bloc.add(BillNumberChanged(val)),
                                 onConfirmRedeemPressed: () => bloc.add(
                                   const ConfirmRedeemClaimRequested(),
+                                ),
+                                onRejectOrFlagPressed: () =>
+                                    _openRejectOrFlagDialog(context, state),
+                                onRefreshValidationPressed: () => bloc.add(
+                                  const RefreshClaimValidationRequested(),
+                                ),
+                                onCloseClaimPressed: () => bloc.add(
+                                  const ClearSelectedCustomerRequested(),
+                                ),
+                                onClaimExpired: () => bloc.add(
+                                  const ClaimTokenExpiredEvent(),
                                 ),
                               ),
                           ],

@@ -13,8 +13,24 @@ enum ScanPosStatus {
   error,
 }
 
+enum VerifyClaimStatus {
+  initial,
+  scanning,
+  validating,
+  claimLoaded,
+  redeeming,
+  redeemed,
+  rejecting,
+  rejected,
+  flagged,
+  expired,
+  invalid,
+  error,
+}
+
 class ScanPosState {
   final ScanPosStatus status;
+  final VerifyClaimStatus verifyClaimStatus;
   final ScanPosMode mode;
   final PointsToCashConfigEntity? activeRateConfig;
   final VerifiedPosCustomerEntity? customer;
@@ -30,6 +46,7 @@ class ScanPosState {
   final String? idempotencyKey;
   final PosAllocationResultEntity? lastAllocationResult;
   final PosClaimRedemptionResultEntity? lastClaimResult;
+  final PosClaimRejectOrFlagResultEntity? lastRejectOrFlagResult;
   final List<PosTransactionEntity> recentTransactions;
   final bool isLoadingHistory;
   final bool isLoadingMoreHistory;
@@ -40,6 +57,7 @@ class ScanPosState {
 
   const ScanPosState({
     this.status = ScanPosStatus.initial,
+    this.verifyClaimStatus = VerifyClaimStatus.initial,
     this.mode = ScanPosMode.giveReward,
     this.activeRateConfig,
     this.customer,
@@ -55,6 +73,7 @@ class ScanPosState {
     this.idempotencyKey,
     this.lastAllocationResult,
     this.lastClaimResult,
+    this.lastRejectOrFlagResult,
     this.recentTransactions = const [],
     this.isLoadingHistory = false,
     this.isLoadingMoreHistory = false,
@@ -83,7 +102,22 @@ class ScanPosState {
   double get instantInr => _cashFor(instantPoints);
   double get futureInr => _cashFor(futurePoints);
   double get totalAllocationInr => _cashFor(totalAllocationPoints);
-  double get redeemInr => _cashFor(redeemPoints);
+
+  double get redeemInr {
+    final c = customer;
+    if (c != null && c.hasClaimToken) {
+      if (c.claimPoints == redeemPoints &&
+          c.claimDiscountAmount != null &&
+          c.claimDiscountAmount! > 0) {
+        return c.claimDiscountAmount!;
+      }
+      return PointsToCashConfigEntity.inrFromPoints(
+        points: redeemPoints,
+        pointsPerRupee: c.pointsPerRupee,
+      );
+    }
+    return _cashFor(redeemPoints);
+  }
 
   bool get canAllocate =>
       customer != null &&
@@ -96,13 +130,19 @@ class ScanPosState {
       customer != null &&
       customer!.isApproved &&
       customer!.hasClaimToken &&
+      customer!.auditChecks.allChecksPassed &&
+      !customer!.isClaimExpiredAt() &&
       redeemPoints > 0 &&
       redeemPoints <= customer!.availablePoints &&
       billNumberInput.trim().length >= 2 &&
-      status != ScanPosStatus.allocating;
+      status != ScanPosStatus.allocating &&
+      verifyClaimStatus != VerifyClaimStatus.redeeming &&
+      verifyClaimStatus != VerifyClaimStatus.rejecting &&
+      verifyClaimStatus != VerifyClaimStatus.expired;
 
   ScanPosState copyWith({
     ScanPosStatus? status,
+    VerifyClaimStatus? verifyClaimStatus,
     ScanPosMode? mode,
     PointsToCashConfigEntity? activeRateConfig,
     VerifiedPosCustomerEntity? customer,
@@ -118,6 +158,7 @@ class ScanPosState {
     String? idempotencyKey,
     PosAllocationResultEntity? lastAllocationResult,
     PosClaimRedemptionResultEntity? lastClaimResult,
+    PosClaimRejectOrFlagResultEntity? lastRejectOrFlagResult,
     List<PosTransactionEntity>? recentTransactions,
     bool? isLoadingHistory,
     bool? isLoadingMoreHistory,
@@ -132,6 +173,7 @@ class ScanPosState {
   }) {
     return ScanPosState(
       status: status ?? this.status,
+      verifyClaimStatus: verifyClaimStatus ?? this.verifyClaimStatus,
       mode: mode ?? this.mode,
       activeRateConfig: activeRateConfig ?? this.activeRateConfig,
       customer: clearCustomer ? null : (customer ?? this.customer),
@@ -153,6 +195,9 @@ class ScanPosState {
       lastClaimResult: clearLastResults
           ? null
           : (lastClaimResult ?? this.lastClaimResult),
+      lastRejectOrFlagResult: clearLastResults
+          ? null
+          : (lastRejectOrFlagResult ?? this.lastRejectOrFlagResult),
       recentTransactions: recentTransactions ?? this.recentTransactions,
       isLoadingHistory: isLoadingHistory ?? this.isLoadingHistory,
       isLoadingMoreHistory: isLoadingMoreHistory ?? this.isLoadingMoreHistory,

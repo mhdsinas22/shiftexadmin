@@ -2,6 +2,32 @@ import 'package:shiftexadmin/features/settings/points_to_cash/domain/entities/po
 
 enum ScanPosMode { giveReward, verifyClaim }
 
+class ClaimAuditChecksEntity {
+  final bool tokenSignatureValid;
+  final bool claimNotExpired;
+  final bool singleUsePassed;
+  final bool replayProtectionPassed;
+  final bool customerEligible;
+  final bool balanceReservationValid;
+
+  const ClaimAuditChecksEntity({
+    this.tokenSignatureValid = true,
+    this.claimNotExpired = true,
+    this.singleUsePassed = true,
+    this.replayProtectionPassed = true,
+    this.customerEligible = true,
+    this.balanceReservationValid = true,
+  });
+
+  bool get allChecksPassed =>
+      tokenSignatureValid &&
+      claimNotExpired &&
+      singleUsePassed &&
+      replayProtectionPassed &&
+      customerEligible &&
+      balanceReservationValid;
+}
+
 class VerifiedPosCustomerEntity {
   final String customerId;
   final String fullName;
@@ -11,6 +37,7 @@ class VerifiedPosCustomerEntity {
   final String membershipId;
   final String membershipTier;
   final int availablePoints;
+  final int reservedPoints;
   final int lockedPoints;
   final int lifetimeEarnedPoints;
   final int lifetimeRedeemedPoints;
@@ -22,8 +49,19 @@ class VerifiedPosCustomerEntity {
   final String? qrPayload;
   final String? tokenPurpose;
   final bool allowDeduction;
+  final DateTime? tokenCreatedAt;
   final DateTime? tokenExpiresAt;
+  final String? claimId;
+  final String? claimReference;
+  final String? claimStatus;
+  final String? claimAuditStatus;
   final int? claimPoints;
+  final double? claimDiscountAmount;
+  final String rewardName;
+  final String rewardCategory;
+  final String merchantName;
+  final String orderReference;
+  final ClaimAuditChecksEntity auditChecks;
   final String verificationMethod;
 
   const VerifiedPosCustomerEntity({
@@ -35,6 +73,7 @@ class VerifiedPosCustomerEntity {
     required this.membershipId,
     this.membershipTier = 'Pebble Black Member',
     required this.availablePoints,
+    this.reservedPoints = 0,
     required this.lockedPoints,
     this.lifetimeEarnedPoints = 0,
     this.lifetimeRedeemedPoints = 0,
@@ -46,8 +85,19 @@ class VerifiedPosCustomerEntity {
     this.qrPayload,
     this.tokenPurpose,
     this.allowDeduction = false,
+    this.tokenCreatedAt,
     this.tokenExpiresAt,
+    this.claimId,
+    this.claimReference,
+    this.claimStatus,
+    this.claimAuditStatus,
     this.claimPoints,
+    this.claimDiscountAmount,
+    this.rewardName = 'Instant POS Bill Discount',
+    this.rewardCategory = 'POS Cashback & Bill Offset',
+    this.merchantName = 'ShiftEx Partner Counter',
+    this.orderReference = '',
+    this.auditChecks = const ClaimAuditChecksEntity(),
     this.verificationMethod = 'qr',
   });
 
@@ -55,6 +105,27 @@ class VerifiedPosCustomerEntity {
 
   bool get hasClaimToken =>
       tokenId != null && tokenPurpose == 'claim' && allowDeduction;
+
+  bool isClaimExpiredAt([DateTime? now]) {
+    if (tokenExpiresAt == null) return false;
+    final ref = now ?? DateTime.now();
+    return !tokenExpiresAt!.isAfter(ref);
+  }
+
+  String formattedRemainingTime([DateTime? now]) {
+    if (tokenExpiresAt == null) return '05:00';
+    final ref = now ?? DateTime.now();
+    final diff = tokenExpiresAt!.difference(ref);
+    if (diff.isNegative || diff.inSeconds <= 0) return '00:00';
+    final mins = (diff.inSeconds ~/ 60).toString().padLeft(2, '0');
+    final secs = (diff.inSeconds % 60).toString().padLeft(2, '0');
+    return '$mins:$secs';
+  }
+
+  String get displayClaimReference =>
+      (claimReference != null && claimReference!.trim().isNotEmpty)
+      ? claimReference!.trim()
+      : (tokenCode ?? 'CLM-0000');
 
   double get availableRupees => PointsToCashConfigEntity.inrFromPoints(
     points: availablePoints,
@@ -83,12 +154,14 @@ class VerifiedPosCustomerEntity {
 
   VerifiedPosCustomerEntity copyWith({
     int? availablePoints,
+    int? reservedPoints,
     int? lockedPoints,
     int? lifetimeEarnedPoints,
     int? lifetimeRedeemedPoints,
     int? pointsPerRupee,
     double? pointsToInrRate,
     String? currencyCode,
+    ClaimAuditChecksEntity? auditChecks,
   }) {
     return VerifiedPosCustomerEntity(
       customerId: customerId,
@@ -99,6 +172,7 @@ class VerifiedPosCustomerEntity {
       membershipId: membershipId,
       membershipTier: membershipTier,
       availablePoints: availablePoints ?? this.availablePoints,
+      reservedPoints: reservedPoints ?? this.reservedPoints,
       lockedPoints: lockedPoints ?? this.lockedPoints,
       lifetimeEarnedPoints: lifetimeEarnedPoints ?? this.lifetimeEarnedPoints,
       lifetimeRedeemedPoints:
@@ -111,8 +185,19 @@ class VerifiedPosCustomerEntity {
       qrPayload: qrPayload,
       tokenPurpose: tokenPurpose,
       allowDeduction: allowDeduction,
+      tokenCreatedAt: tokenCreatedAt,
       tokenExpiresAt: tokenExpiresAt,
+      claimId: claimId,
+      claimReference: claimReference,
+      claimStatus: claimStatus,
+      claimAuditStatus: claimAuditStatus,
       claimPoints: claimPoints,
+      claimDiscountAmount: claimDiscountAmount,
+      rewardName: rewardName,
+      rewardCategory: rewardCategory,
+      merchantName: merchantName,
+      orderReference: orderReference,
+      auditChecks: auditChecks ?? this.auditChecks,
       verificationMethod: verificationMethod,
     );
   }

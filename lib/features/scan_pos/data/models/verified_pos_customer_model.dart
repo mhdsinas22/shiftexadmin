@@ -10,6 +10,7 @@ class VerifiedPosCustomerModel extends VerifiedPosCustomerEntity {
     required super.membershipId,
     super.membershipTier,
     required super.availablePoints,
+    super.reservedPoints,
     required super.lockedPoints,
     super.lifetimeEarnedPoints,
     super.lifetimeRedeemedPoints,
@@ -21,8 +22,19 @@ class VerifiedPosCustomerModel extends VerifiedPosCustomerEntity {
     super.qrPayload,
     super.tokenPurpose,
     super.allowDeduction,
+    super.tokenCreatedAt,
     super.tokenExpiresAt,
+    super.claimId,
+    super.claimReference,
+    super.claimStatus,
+    super.claimAuditStatus,
     super.claimPoints,
+    super.claimDiscountAmount,
+    super.rewardName,
+    super.rewardCategory,
+    super.merchantName,
+    super.orderReference,
+    super.auditChecks,
     super.verificationMethod,
   });
 
@@ -44,6 +56,28 @@ class VerifiedPosCustomerModel extends VerifiedPosCustomerEntity {
     }
     if (parsedPtsPerRupee <= 0) parsedPtsPerRupee = 10;
 
+    final rawClaimDiscount = json['claim_discount_amount'];
+    final double? parsedClaimDiscount = rawClaimDiscount is num
+        ? rawClaimDiscount.toDouble()
+        : double.tryParse(rawClaimDiscount?.toString() ?? '');
+
+    final rawChecks = json['audit_checks'];
+    final checksMap = rawChecks is Map
+        ? Map<String, dynamic>.from(rawChecks)
+        : const <String, dynamic>{};
+
+    final auditChecks = ClaimAuditChecksEntity(
+      tokenSignatureValid:
+          checksMap['token_signature_valid'] as bool? ?? true,
+      claimNotExpired: checksMap['claim_not_expired'] as bool? ?? true,
+      singleUsePassed: checksMap['single_use_passed'] as bool? ?? true,
+      replayProtectionPassed:
+          checksMap['replay_protection_passed'] as bool? ?? true,
+      customerEligible: checksMap['customer_eligible'] as bool? ?? true,
+      balanceReservationValid:
+          checksMap['balance_reservation_valid'] as bool? ?? true,
+    );
+
     return VerifiedPosCustomerModel(
       customerId: json['customer_id']?.toString() ?? '',
       fullName: json['full_name']?.toString() ?? 'SHIIFTEX Member',
@@ -54,6 +88,7 @@ class VerifiedPosCustomerModel extends VerifiedPosCustomerEntity {
       membershipTier:
           json['membership_tier']?.toString() ?? 'Pebble Black Member',
       availablePoints: (json['available_points'] as num?)?.toInt() ?? 0,
+      reservedPoints: (json['reserved_points'] as num?)?.toInt() ?? 0,
       lockedPoints: (json['locked_points'] as num?)?.toInt() ?? 0,
       lifetimeEarnedPoints:
           (json['lifetime_earned_points'] as num?)?.toInt() ?? 0,
@@ -67,10 +102,26 @@ class VerifiedPosCustomerModel extends VerifiedPosCustomerEntity {
       qrPayload: json['qr_payload']?.toString(),
       tokenPurpose: json['token_purpose']?.toString(),
       allowDeduction: json['allow_deduction'] as bool? ?? false,
-      tokenExpiresAt: json['token_expires_at'] != null
-          ? DateTime.tryParse(json['token_expires_at'].toString())
+      tokenCreatedAt: json['token_created_at'] != null
+          ? DateTime.tryParse(json['token_created_at'].toString())?.toLocal()
           : null,
+      tokenExpiresAt: json['token_expires_at'] != null
+          ? DateTime.tryParse(json['token_expires_at'].toString())?.toLocal()
+          : null,
+      claimId: json['claim_id']?.toString(),
+      claimReference: json['claim_reference']?.toString(),
+      claimStatus: json['claim_status']?.toString(),
+      claimAuditStatus: json['claim_audit_status']?.toString(),
       claimPoints: (json['claim_points'] as num?)?.toInt(),
+      claimDiscountAmount: parsedClaimDiscount,
+      rewardName:
+          json['reward_name']?.toString() ?? 'Instant POS Bill Discount',
+      rewardCategory:
+          json['reward_category']?.toString() ?? 'POS Cashback & Bill Offset',
+      merchantName:
+          json['merchant_name']?.toString() ?? 'ShiftEx Partner Counter',
+      orderReference: json['order_reference']?.toString() ?? '',
+      auditChecks: auditChecks,
       verificationMethod: json['verification_method']?.toString() ?? 'qr',
     );
   }

@@ -7,6 +7,7 @@ import 'package:shiftexadmin/features/scan_pos/domain/usecases/allocate_pos_poin
 import 'package:shiftexadmin/features/scan_pos/domain/usecases/get_pos_customer_wallet_usecase.dart';
 import 'package:shiftexadmin/features/scan_pos/domain/usecases/get_pos_recent_transactions_usecase.dart';
 import 'package:shiftexadmin/features/scan_pos/domain/usecases/redeem_customer_claim_qr_usecase.dart';
+import 'package:shiftexadmin/features/scan_pos/domain/usecases/reject_or_flag_claim_qr_usecase.dart';
 import 'package:shiftexadmin/features/scan_pos/domain/usecases/search_pos_customers_usecase.dart';
 import 'package:shiftexadmin/features/scan_pos/domain/usecases/verify_customer_qr_usecase.dart';
 import 'package:shiftexadmin/features/scan_pos/presentation/bloc/scan_pos_event.dart';
@@ -20,6 +21,7 @@ class ScanPosBloc extends Bloc<ScanPosEvent, ScanPosState> {
   final GetPosCustomerWalletUseCase? getPosCustomerWalletUseCase;
   final AllocatePosPointsUseCase allocatePosPointsUseCase;
   final RedeemCustomerClaimQrUseCase redeemCustomerClaimQrUseCase;
+  final RejectOrFlagClaimQrUseCase? rejectOrFlagClaimQrUseCase;
   final GetPosRecentTransactionsUseCase getPosRecentTransactionsUseCase;
   final GetPointsToCashConfigUseCase? getPointsToCashConfigUseCase;
 
@@ -36,6 +38,7 @@ class ScanPosBloc extends Bloc<ScanPosEvent, ScanPosState> {
     this.getPosCustomerWalletUseCase,
     required this.allocatePosPointsUseCase,
     required this.redeemCustomerClaimQrUseCase,
+    this.rejectOrFlagClaimQrUseCase,
     required this.getPosRecentTransactionsUseCase,
     this.getPointsToCashConfigUseCase,
   }) : super(
@@ -44,6 +47,7 @@ class ScanPosBloc extends Bloc<ScanPosEvent, ScanPosState> {
     on<InitializeScanPosRequested>(_onInitialize);
     on<RefreshPosRateConfigRequested>(_onRefreshRateConfig);
     on<RefreshSelectedCustomerWalletRequested>(_onRefreshCustomerWallet);
+    on<RefreshClaimValidationRequested>(_onRefreshClaimValidation);
     on<CentralRateConfigUpdatedEvent>(_onCentralRateConfigUpdated);
     on<ScanPosModeChanged>(_onModeChanged);
     on<QrCodeDetectedEvent>(_onQrCodeDetected);
@@ -57,6 +61,8 @@ class ScanPosBloc extends Bloc<ScanPosEvent, ScanPosState> {
     on<BranchNameChanged>(_onBranchNameChanged);
     on<ConfirmAllocatePointsRequested>(_onConfirmAllocate);
     on<ConfirmRedeemClaimRequested>(_onConfirmRedeemClaim);
+    on<RejectOrFlagClaimQrRequested>(_onRejectOrFlagClaim);
+    on<ClaimTokenExpiredEvent>(_onClaimTokenExpired);
     on<LoadRecentTransactionsRequested>(_onLoadRecentTransactions);
     on<ClearSelectedCustomerRequested>(_onClearCustomer);
 
@@ -260,6 +266,32 @@ class ScanPosBloc extends Bloc<ScanPosEvent, ScanPosState> {
     await _verifyQrInput(event.code.trim(), emit);
   }
 
+  Future<void> _onRefreshClaimValidation(
+    RefreshClaimValidationRequested event,
+    Emitter<ScanPosState> emit,
+  ) async {
+    final current = state.customer;
+    final payload = current?.qrPayload ?? current?.tokenCode ?? '';
+    if (payload.trim().isEmpty) return;
+    await _verifyQrInput(payload.trim(), emit);
+  }
+
+  void _onClaimTokenExpired(
+    ClaimTokenExpiredEvent event,
+    Emitter<ScanPosState> emit,
+  ) {
+    if (state.mode != ScanPosMode.verifyClaim || state.customer == null) return;
+    emit(
+      state.copyWith(
+        verifyClaimStatus: VerifyClaimStatus.expired,
+        status: ScanPosStatus.error,
+        errorNonce: state.errorNonce + 1,
+        errorMessage:
+            'Claim token expired. Ask the customer to generate a fresh Claim QR.',
+      ),
+    );
+  }
+
   Future<void> _verifyQrInput(
     String rawInput,
     Emitter<ScanPosState> emit,
@@ -267,6 +299,9 @@ class ScanPosBloc extends Bloc<ScanPosEvent, ScanPosState> {
     emit(
       state.copyWith(
         status: ScanPosStatus.verifying,
+        verifyClaimStatus: state.mode == ScanPosMode.verifyClaim
+            ? VerifyClaimStatus.validating
+            : state.verifyClaimStatus,
         errorMessage: '',
         clearSuccessMessage: true,
         clearLastResults: true,
@@ -295,9 +330,24 @@ class ScanPosBloc extends Bloc<ScanPosEvent, ScanPosState> {
             updatedAt: now,
           );
 
+      final prefilledBill = state.billNumberInput.trim().isNotEmpty
+          ? state.billNumberInput
+          : (verified.hasClaimToken && verified.orderReference.trim().isNotEmpty
+                ? verified.orderReference.trim()
+                : state.billNumberInput);
+
+      final nextClaimStatus = state.mode == ScanPosMode.verifyClaim
+          ? (verified.isClaimExpiredAt(now)
+                ? VerifyClaimStatus.expired
+                : (verified.auditChecks.allChecksPassed
+                      ? VerifyClaimStatus.claimLoaded
+                      : VerifyClaimStatus.invalid))
+          : VerifyClaimStatus.initial;
+
       emit(
         state.copyWith(
           status: ScanPosStatus.customerLoaded,
+          verifyClaimStatus: nextClaimStatus,
           activeRateConfig: syncedRate,
           customer: verified,
           idempotencyKey: _nextIdempotencyKey(verified.customerId),
@@ -309,16 +359,31 @@ class ScanPosBloc extends Bloc<ScanPosEvent, ScanPosState> {
                           ? '100'
                           : verified.availablePoints.toString()))
               : '',
+          billNumberInput: prefilledBill,
           errorMessage: '',
         ),
       );
     } catch (e) {
       AppLogger.warning('POS QR verification failed: $e');
+      final cleaned = _cleanError(e);
+      final lower = cleaned.toLowerCase();
+      final VerifyClaimStatus failedClaimStatus = lower.contains('expired')
+          ? VerifyClaimStatus.expired
+          : (lower.contains('invalid') ||
+                lower.contains('revoked') ||
+                lower.contains('already') ||
+                lower.contains('personal member qr'))
+          ? VerifyClaimStatus.invalid
+          : VerifyClaimStatus.error;
+
       emit(
         state.copyWith(
           status: ScanPosStatus.error,
+          verifyClaimStatus: state.mode == ScanPosMode.verifyClaim
+              ? failedClaimStatus
+              : state.verifyClaimStatus,
           errorNonce: state.errorNonce + 1,
-          errorMessage: _cleanError(e),
+          errorMessage: cleaned,
         ),
       );
     }
@@ -713,6 +778,7 @@ class ScanPosBloc extends Bloc<ScanPosEvent, ScanPosState> {
     emit(
       state.copyWith(
         status: ScanPosStatus.allocating,
+        verifyClaimStatus: VerifyClaimStatus.redeeming,
         idempotencyKey: idemKey,
         errorMessage: '',
         clearSuccessMessage: true,
@@ -727,6 +793,12 @@ class ScanPosBloc extends Bloc<ScanPosEvent, ScanPosState> {
         branchName: state.branchName,
         idempotencyKey: idemKey,
       );
+
+      if (getPosCustomerWalletUseCase != null) {
+        try {
+          await getPosCustomerWalletUseCase!(customerId: customer.customerId);
+        } catch (_) {}
+      }
 
       List<PosTransactionEntity> history = state.recentTransactions;
       bool hasMoreHistory = state.hasMoreHistory;
@@ -744,6 +816,7 @@ class ScanPosBloc extends Bloc<ScanPosEvent, ScanPosState> {
       emit(
         state.copyWith(
           status: ScanPosStatus.success,
+          verifyClaimStatus: VerifyClaimStatus.redeemed,
           clearCustomer: true,
           lastClaimResult: result,
           recentTransactions: history,
@@ -760,6 +833,75 @@ class ScanPosBloc extends Bloc<ScanPosEvent, ScanPosState> {
       emit(
         state.copyWith(
           status: ScanPosStatus.error,
+          verifyClaimStatus: VerifyClaimStatus.error,
+          errorNonce: state.errorNonce + 1,
+          errorMessage: _cleanError(e),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onRejectOrFlagClaim(
+    RejectOrFlagClaimQrRequested event,
+    Emitter<ScanPosState> emit,
+  ) async {
+    final customer = state.customer;
+    if (customer == null || customer.tokenId == null) {
+      emit(
+        state.copyWith(
+          status: ScanPosStatus.error,
+          verifyClaimStatus: VerifyClaimStatus.error,
+          errorNonce: state.errorNonce + 1,
+          errorMessage: 'No active claim token selected to reject or flag.',
+        ),
+      );
+      return;
+    }
+
+    final useCase = rejectOrFlagClaimQrUseCase;
+    if (useCase == null) return;
+
+    emit(
+      state.copyWith(
+        status: ScanPosStatus.allocating,
+        verifyClaimStatus: VerifyClaimStatus.rejecting,
+        errorMessage: '',
+        clearSuccessMessage: true,
+      ),
+    );
+
+    try {
+      final result = await useCase(
+        tokenId: customer.tokenId!,
+        action: event.action,
+        reason: event.reason,
+        branchName: state.branchName,
+      );
+
+      final isFlagged = result.isFlagged;
+      emit(
+        state.copyWith(
+          status: ScanPosStatus.success,
+          verifyClaimStatus: isFlagged
+              ? VerifyClaimStatus.flagged
+              : VerifyClaimStatus.rejected,
+          clearCustomer: true,
+          lastRejectOrFlagResult: result,
+          clearIdempotencyKey: true,
+          redeemPointsInput: '',
+          billNumberInput: '',
+          errorMessage: '',
+          successMessage: isFlagged
+              ? 'Claim ${result.claimReference} flagged for security audit & reserved points released.'
+              : 'Claim ${result.claimReference} rejected & reserved points returned to customer wallet.',
+        ),
+      );
+    } catch (e) {
+      AppLogger.error('Error rejecting/flagging claim QR: $e');
+      emit(
+        state.copyWith(
+          status: ScanPosStatus.error,
+          verifyClaimStatus: VerifyClaimStatus.error,
           errorNonce: state.errorNonce + 1,
           errorMessage: _cleanError(e),
         ),
