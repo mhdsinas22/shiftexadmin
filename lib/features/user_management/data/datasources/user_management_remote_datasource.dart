@@ -10,6 +10,11 @@ abstract class UserManagementRemoteDatasource {
     int offset = 0,
   });
 
+  Future<List<CustomerModel>> getTopEarners({
+    String range = 'weekly',
+    int limit = 3,
+  });
+
   Future<UserStatisticsModel> getUserStatistics();
 
   Future<CustomerModel> getCustomerDetails(String customerId);

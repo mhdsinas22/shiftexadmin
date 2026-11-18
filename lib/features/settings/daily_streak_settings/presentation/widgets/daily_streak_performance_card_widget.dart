@@ -1,26 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:shiftexadmin/core/constants/app_colors.dart';
 import 'package:shiftexadmin/features/settings/daily_streak_settings/domain/entities/daily_streak_statistics_entity.dart';
+import 'package:shiftexadmin/features/settings/points_to_cash/domain/entities/points_to_cash_config_entity.dart';
 
 class DailyStreakPerformanceCardWidget extends StatelessWidget {
   final DailyStreakStatisticsEntity statistics;
-  final double pointsToInrRate;
+  final int pointsPerRupee;
   final bool isStreakEnabled;
   final VoidCallback onViewAuditHistory;
 
   const DailyStreakPerformanceCardWidget({
     super.key,
     required this.statistics,
-    required this.pointsToInrRate,
+    required this.pointsPerRupee,
     required this.isStreakEnabled,
     required this.onViewAuditHistory,
   });
 
   String _formatNumber(int value) {
     return value.toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (match) => '${match[1]},',
-        );
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (match) => '${match[1]},',
+    );
   }
 
   @override
@@ -44,7 +45,10 @@ class DailyStreakPerformanceCardWidget extends StatelessWidget {
       badgeLabel = 'Healthy';
     }
 
-    final double poolInr = statistics.distributedPoints30d * pointsToInrRate;
+    final double poolInr = PointsToCashConfigEntity.inrFromPoints(
+      points: statistics.distributedPoints30d,
+      pointsPerRupee: pointsPerRupee,
+    );
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -73,10 +77,7 @@ class DailyStreakPerformanceCardWidget extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 3,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: badgeBg,
                   borderRadius: BorderRadius.circular(12),
@@ -119,7 +120,9 @@ class DailyStreakPerformanceCardWidget extends StatelessWidget {
                         ),
                         children: [
                           TextSpan(
-                            text: _formatNumber(statistics.distributedPoints30d),
+                            text: _formatNumber(
+                              statistics.distributedPoints30d,
+                            ),
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,

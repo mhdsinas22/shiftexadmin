@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shiftexadmin/core/constants/app_colors.dart';
+import 'package:shiftexadmin/features/settings/points_to_cash/domain/entities/points_to_cash_config_entity.dart';
 
 class DailyStreakPointsInputWidget extends StatefulWidget {
   final String pointsText;
-  final double pointsToInrRate;
+  final int pointsPerRupee;
   final bool enabled;
   final String? validationError;
   final ValueChanged<String> onChanged;
@@ -12,7 +13,7 @@ class DailyStreakPointsInputWidget extends StatefulWidget {
   const DailyStreakPointsInputWidget({
     super.key,
     required this.pointsText,
-    required this.pointsToInrRate,
+    required this.pointsPerRupee,
     required this.enabled,
     required this.onChanged,
     this.validationError,
@@ -53,7 +54,10 @@ class _DailyStreakPointsInputWidgetState
   @override
   Widget build(BuildContext context) {
     final parsed = int.tryParse(widget.pointsText.trim()) ?? 0;
-    final inrEquivalent = (parsed * widget.pointsToInrRate).toStringAsFixed(2);
+    final inrEquivalent = PointsToCashConfigEntity.inrFromPoints(
+      points: parsed,
+      pointsPerRupee: widget.pointsPerRupee,
+    ).toStringAsFixed(2);
     final hasError = widget.validationError != null;
 
     return Column(
@@ -77,9 +81,7 @@ class _DailyStreakPointsInputWidgetState
                 : const Color(0xFFF1F5F9),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: hasError
-                  ? AppColors.purered
-                  : const Color(0xFFE2E8F0),
+              color: hasError ? AppColors.purered : const Color(0xFFE2E8F0),
               width: 1.2,
             ),
           ),

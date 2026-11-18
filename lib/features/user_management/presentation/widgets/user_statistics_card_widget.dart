@@ -49,7 +49,7 @@ class UserStatisticsCardWidget extends StatelessWidget {
                 fontSize: 12,
                 color: AppColors.textSecondary,
               ),
-              if (trailingWidget != null) trailingWidget!,
+              ?trailingWidget,
             ],
           ),
           const SizedBox(height: 10),

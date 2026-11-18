@@ -3,8 +3,13 @@ import 'package:shiftexadmin/core/routes/route_names.dart';
 import 'package:shiftexadmin/core/widgets/admin_main_shell.dart';
 import 'package:shiftexadmin/features/ads/presentation/pages/ads_page.dart';
 import 'package:shiftexadmin/features/authentication/presentation/pages/login_page.dart';
-import 'package:shiftexadmin/features/settings/daily_streak_settings/presentation/pages/daily_streak_audit_page.dart';
+import 'package:shiftexadmin/features/dashboard/domain/entities/master_ledger_entry_entity.dart';
 import 'package:shiftexadmin/features/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:shiftexadmin/features/dashboard/presentation/pages/master_ledger_page.dart';
+import 'package:shiftexadmin/features/scan_pos/domain/entities/verified_pos_customer_entity.dart';
+import 'package:shiftexadmin/features/scan_pos/presentation/pages/scan_pos_page.dart';
+import 'package:shiftexadmin/features/settings/daily_streak_settings/presentation/pages/daily_streak_audit_page.dart';
+import 'package:shiftexadmin/features/settings/points_to_cash/presentation/pages/points_to_cash_audit_page.dart';
 import 'package:shiftexadmin/features/settings/presentation/pages/settings_page.dart';
 import 'package:shiftexadmin/features/user_management/domain/entities/customer_entity.dart';
 import 'package:shiftexadmin/features/user_management/presentation/pages/customer_details_page.dart';
@@ -55,7 +60,14 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: RouteNames.userManagementRoute,
-                builder: (context, state) => const UserManagementPage(),
+                builder: (context, state) {
+                  final filter = state.uri.queryParameters['filter'];
+                  final ts = state.uri.queryParameters['ts'];
+                  return UserManagementPage(
+                    initialFilter: filter,
+                    navigationNonce: ts,
+                  );
+                },
               ),
             ],
           ),
@@ -77,9 +89,42 @@ class AppRouter {
               ),
             ],
           ),
+
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: RouteNames.scanPosRoute,
+                builder: (context, state) {
+                  final modeStr = state.uri.queryParameters['mode'];
+                  final code = state.uri.queryParameters['code'];
+                  final ts = state.uri.queryParameters['ts'];
+                  ScanPosMode? initialMode;
+                  if (modeStr == 'verify_claim') {
+                    initialMode = ScanPosMode.verifyClaim;
+                  } else if (modeStr == 'give_reward') {
+                    initialMode = ScanPosMode.giveReward;
+                  }
+                  return ScanPosPage(
+                    initialMode: initialMode,
+                    initialQrCode: code,
+                    navigationNonce: ts,
+                  );
+                },
+              ),
+            ],
+          ),
         ],
       ),
 
+      GoRoute(
+        path: RouteNames.masterLedgerRoute,
+        builder: (context, state) {
+          final categoryParam = state.uri.queryParameters['category'];
+          return MasterLedgerPage(
+            initialCategory: LedgerCategoryFilter.fromString(categoryParam),
+          );
+        },
+      ),
       GoRoute(
         path: RouteNames.customerDetailsRoute,
         builder: (context, state) {
@@ -95,6 +140,10 @@ class AppRouter {
       GoRoute(
         path: RouteNames.dailyStreakAuditRoute,
         builder: (context, state) => const DailyStreakAuditPage(),
+      ),
+      GoRoute(
+        path: RouteNames.pointsToCashAuditRoute,
+        builder: (context, state) => const PointsToCashAuditPage(),
       ),
     ],
   );

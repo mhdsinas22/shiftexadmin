@@ -10,6 +10,11 @@ abstract class UserManagementRepository {
     int offset = 0,
   });
 
+  Future<List<CustomerEntity>> getTopEarners({
+    String range = 'weekly',
+    int limit = 3,
+  }) async => const [];
+
   Future<UserStatisticsEntity> getUserStatistics();
 
   Future<CustomerEntity> getCustomerDetails(String customerId);

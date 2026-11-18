@@ -10,6 +10,7 @@ class DailyStreakSettingsModel extends DailyStreakSettingsEntity {
     super.eligibilityScansPerCycle,
     super.timezone,
     super.dailyResetTime,
+    super.pointsPerRupee,
     super.pointsToInrRate,
     super.updatedBy,
     required super.updatedAt,
@@ -21,6 +22,15 @@ class DailyStreakSettingsModel extends DailyStreakSettingsEntity {
         ? rawRate.toDouble()
         : (double.tryParse(rawRate?.toString() ?? '') ?? 0.10);
 
+    final rawPtsPerRupee =
+        json['points_per_rupee'] ?? json['points_per_currency_unit'];
+    int? parsedPtsPerRupee;
+    if (rawPtsPerRupee is num) {
+      parsedPtsPerRupee = rawPtsPerRupee.round();
+    } else if (rawPtsPerRupee != null) {
+      parsedPtsPerRupee = double.tryParse(rawPtsPerRupee.toString())?.round();
+    }
+
     return DailyStreakSettingsModel(
       id: json['id']?.toString() ?? '',
       dailyLoginEnabled: json['daily_login_enabled'] as bool? ?? true,
@@ -31,6 +41,9 @@ class DailyStreakSettingsModel extends DailyStreakSettingsEntity {
           (json['eligibility_scans_per_cycle'] as num?)?.toInt() ?? 1,
       timezone: json['timezone']?.toString() ?? 'Asia/Kolkata',
       dailyResetTime: json['daily_reset_time']?.toString() ?? '06:00:00',
+      pointsPerRupee: (parsedPtsPerRupee != null && parsedPtsPerRupee > 0)
+          ? parsedPtsPerRupee
+          : null,
       pointsToInrRate: parsedRate,
       updatedBy: json['updated_by']?.toString(),
       updatedAt: json['updated_at'] != null
@@ -49,6 +62,7 @@ class DailyStreakSettingsModel extends DailyStreakSettingsEntity {
       'eligibility_scans_per_cycle': eligibilityScansPerCycle,
       'timezone': timezone,
       'daily_reset_time': dailyResetTime,
+      if (pointsPerRupee != null) 'points_per_rupee': pointsPerRupee,
       'points_to_inr_rate': pointsToInrRate,
       'updated_by': updatedBy,
       'updated_at': updatedAt.toUtc().toIso8601String(),

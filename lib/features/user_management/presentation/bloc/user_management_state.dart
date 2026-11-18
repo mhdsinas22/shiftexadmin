@@ -13,6 +13,9 @@ enum UserManagementStatus {
 class UserManagementState {
   final UserManagementStatus status;
   final List<CustomerEntity> customers;
+  final List<CustomerEntity> topEarners;
+  final String topEarnersRange;
+  final bool isLoadingTopEarners;
   final UserStatisticsEntity statistics;
   final String selectedFilter;
   final String searchQuery;
@@ -25,6 +28,9 @@ class UserManagementState {
   const UserManagementState({
     this.status = UserManagementStatus.initial,
     this.customers = const [],
+    this.topEarners = const [],
+    this.topEarnersRange = 'Weekly',
+    this.isLoadingTopEarners = false,
     this.statistics = const UserStatisticsEntity(
       registeredCount: 0,
       pendingCount: 0,
@@ -51,6 +57,9 @@ class UserManagementState {
   UserManagementState copyWith({
     UserManagementStatus? status,
     List<CustomerEntity>? customers,
+    List<CustomerEntity>? topEarners,
+    String? topEarnersRange,
+    bool? isLoadingTopEarners,
     UserStatisticsEntity? statistics,
     String? selectedFilter,
     String? searchQuery,
@@ -65,6 +74,9 @@ class UserManagementState {
     return UserManagementState(
       status: status ?? this.status,
       customers: customers ?? this.customers,
+      topEarners: topEarners ?? this.topEarners,
+      topEarnersRange: topEarnersRange ?? this.topEarnersRange,
+      isLoadingTopEarners: isLoadingTopEarners ?? this.isLoadingTopEarners,
       statistics: statistics ?? this.statistics,
       selectedFilter: selectedFilter ?? this.selectedFilter,
       searchQuery: searchQuery ?? this.searchQuery,

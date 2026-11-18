@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shiftexadmin/core/constants/app_colors.dart';
 import 'package:shiftexadmin/core/routes/route_names.dart';
-import 'package:shiftexadmin/core/widgets/pos_scanner_modal_widget.dart';
 
 class AdminBottomNavBarWidget extends StatelessWidget {
   final int currentIndex;
@@ -21,7 +20,8 @@ class AdminBottomNavBarWidget extends StatelessWidget {
     }
 
     if (index == 99) {
-      PosScannerModalWidget.show(context);
+      if (currentIndex == 4 || currentIndex == 99) return;
+      context.go(RouteNames.scanPosRoute);
       return;
     }
 
@@ -145,6 +145,7 @@ class AdminBottomNavBarWidget extends StatelessWidget {
   }
 
   Widget _buildCenterScanButton(BuildContext context) {
+    final isSelected = currentIndex == 4 || currentIndex == 99;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => handleTabTap(context, 99),
@@ -160,10 +161,13 @@ class AdminBottomNavBarWidget extends StatelessWidget {
               child: Container(
                 width: 42,
                 height: 42,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppColors.linkBlue,
                   shape: BoxShape.circle,
-                  boxShadow: [
+                  border: isSelected
+                      ? Border.all(color: AppColors.darkNavy, width: 2)
+                      : null,
+                  boxShadow: const [
                     BoxShadow(
                       color: Color(0x332563EB),
                       blurRadius: 8,
@@ -182,7 +186,7 @@ class AdminBottomNavBarWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 3),
-          const SizedBox(
+          SizedBox(
             height: 14,
             child: Text(
               'Scan POS',
@@ -191,8 +195,10 @@ class AdminBottomNavBarWidget extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 10.5,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF64748B),
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected
+                    ? AppColors.darkNavy
+                    : const Color(0xFF64748B),
               ),
             ),
           ),

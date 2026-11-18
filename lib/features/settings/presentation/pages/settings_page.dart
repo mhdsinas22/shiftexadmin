@@ -9,6 +9,10 @@ import 'package:shiftexadmin/features/settings/daily_streak_settings/presentatio
 import 'package:shiftexadmin/features/settings/daily_streak_settings/presentation/bloc/daily_streak_settings_event.dart';
 import 'package:shiftexadmin/features/settings/daily_streak_settings/presentation/bloc/daily_streak_settings_state.dart';
 import 'package:shiftexadmin/features/settings/daily_streak_settings/presentation/widgets/daily_streak_config_card_widget.dart';
+import 'package:shiftexadmin/features/settings/points_to_cash/presentation/bloc/points_to_cash_bloc.dart';
+import 'package:shiftexadmin/features/settings/points_to_cash/presentation/bloc/points_to_cash_event.dart';
+import 'package:shiftexadmin/features/settings/points_to_cash/presentation/bloc/points_to_cash_state.dart';
+import 'package:shiftexadmin/features/settings/points_to_cash/presentation/widgets/update_points_to_cash_dialog_widget.dart';
 import 'package:shiftexadmin/features/settings/presentation/widgets/admin_identity_card_widget.dart';
 import 'package:shiftexadmin/features/settings/presentation/widgets/points_to_cash_card_widget.dart';
 import 'package:shiftexadmin/features/settings/presentation/widgets/settings_header_widget.dart';
@@ -20,9 +24,17 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<DailyStreakSettingsBloc>(
-      create: (_) => sl<DailyStreakSettingsBloc>()
-        ..add(const LoadDailyStreakSettingsRequested()),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<DailyStreakSettingsBloc>(
+          create: (_) => sl<DailyStreakSettingsBloc>()
+            ..add(const LoadDailyStreakSettingsRequested()),
+        ),
+        BlocProvider<PointsToCashBloc>(
+          create: (_) => sl<PointsToCashBloc>()
+            ..add(const LoadPointsToCashConfigRequested()),
+        ),
+      ],
       child: const SettingsView(),
     );
   }
@@ -72,101 +84,192 @@ class SettingsView extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
-        child: BlocConsumer<DailyStreakSettingsBloc, DailyStreakSettingsState>(
-          listener: (context, state) {
-            if (state.successMessage != null &&
-                state.successMessage!.isNotEmpty) {
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  behavior: SnackBarBehavior.floating,
-                  backgroundColor: AppColors.eifGreen,
-                  content: Text(
-                    state.successMessage!,
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.pureWhite,
+        child: MultiBlocListener(
+          listeners: [
+            BlocListener<DailyStreakSettingsBloc, DailyStreakSettingsState>(
+              listener: (context, state) {
+                if (state.successMessage != null &&
+                    state.successMessage!.isNotEmpty) {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: AppColors.eifGreen,
+                      content: Text(
+                        state.successMessage!,
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.pureWhite,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              );
-            } else if (state.status == DailyStreakSettingsStatus.error &&
-                state.errorMessage.isNotEmpty) {
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  behavior: SnackBarBehavior.floating,
-                  backgroundColor: AppColors.purered,
-                  content: Text(
-                    state.errorMessage,
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.pureWhite,
+                  );
+                } else if (state.status == DailyStreakSettingsStatus.error &&
+                    state.errorMessage.isNotEmpty) {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: AppColors.purered,
+                      content: Text(
+                        state.errorMessage,
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.pureWhite,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              );
-            }
-          },
-          builder: (context, state) {
-            final bloc = context.read<DailyStreakSettingsBloc>();
-
-            return RefreshIndicator(
-              color: AppColors.linkBlue,
-              onRefresh: () async {
-                bloc.add(const RefreshDailyStreakSettingsRequested());
+                  );
+                }
               },
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(
-                  parent: BouncingScrollPhysics(),
-                ),
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SettingsHeaderWidget(),
-                    const SizedBox(height: 16),
-
-                    // Admin Identity Card
-                    AdminIdentityCardWidget(
-                      email: user?.email ?? 'admin@shiftex.in',
+            ),
+            BlocListener<PointsToCashBloc, PointsToCashState>(
+              listenWhen: (previous, current) {
+                final successChanged = current.successMessage != null &&
+                    current.successMessage!.isNotEmpty &&
+                    previous.successMessage != current.successMessage;
+                final errorChanged =
+                    current.status == PointsToCashStatus.error &&
+                        current.errorMessage.isNotEmpty &&
+                        previous.errorMessage != current.errorMessage;
+                return successChanged || errorChanged;
+              },
+              listener: (context, state) {
+                if (state.successMessage != null &&
+                    state.successMessage!.isNotEmpty) {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: AppColors.eifGreen,
+                      content: Text(
+                        state.successMessage!,
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.pureWhite,
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 16),
-
-                    // Daily Login Streak Configuration Card
-                    DailyStreakConfigCardWidget(
-                      state: state,
-                      onToggleEnabled: (enabled) {
-                        bloc.add(ToggleDailyStreakEnabledChanged(enabled));
-                      },
-                      onPointsChanged: (raw) {
-                        bloc.add(DailyStreakPointsChanged(raw));
-                      },
-                      onPresetSelected: (pts) {
-                        bloc.add(SelectDailyStreakPresetPoints(pts));
-                      },
-                      onSavePressed: () {
-                        FocusScope.of(context).unfocus();
-                        bloc.add(const SaveDailyStreakSettingsRequested());
-                      },
-                      onViewAuditHistory: () {
-                        context.push(RouteNames.dailyStreakAuditRoute);
-                      },
-                      onRetryLoad: () {
-                        bloc.add(const LoadDailyStreakSettingsRequested());
-                      },
+                  );
+                  // Keep Daily Login Streak fiat conversions synchronized with active rate
+                  context.read<DailyStreakSettingsBloc>().add(
+                        const RefreshDailyStreakSettingsRequested(),
+                      );
+                } else if (state.status == PointsToCashStatus.error &&
+                    state.errorMessage.isNotEmpty) {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: AppColors.purered,
+                      content: Text(
+                        state.errorMessage,
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.pureWhite,
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 16),
+                  );
+                }
+              },
+            ),
+          ],
+          child:
+              BlocBuilder<DailyStreakSettingsBloc, DailyStreakSettingsState>(
+            builder: (context, streakState) {
+              final streakBloc = context.read<DailyStreakSettingsBloc>();
+              final rateBloc = context.read<PointsToCashBloc>();
 
-                    // Points-to-Cash Valuation Card (from reward_settings rate)
-                    PointsToCashCardWidget(
-                      pointsToInrRate: state.settings?.pointsToInrRate ?? 0.10,
-                    ),
-                    const SizedBox(height: 20),
+              return RefreshIndicator(
+                color: AppColors.linkBlue,
+                onRefresh: () async {
+                  streakBloc.add(const RefreshDailyStreakSettingsRequested());
+                  rateBloc.add(const RefreshPointsToCashConfigRequested());
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SettingsHeaderWidget(),
+                      const SizedBox(height: 16),
+
+                      // Admin Identity Card
+                      AdminIdentityCardWidget(
+                        email: user?.email ?? 'admin@shiftex.in',
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Daily Login Streak Configuration Card
+                      BlocBuilder<PointsToCashBloc, PointsToCashState>(
+                        buildWhen: (prev, curr) =>
+                            prev.config?.pointsPerRupee !=
+                            curr.config?.pointsPerRupee,
+                        builder: (context, rateState) {
+                          return DailyStreakConfigCardWidget(
+                            state: streakState,
+                            activePointsPerRupee:
+                                rateState.config?.pointsPerRupee,
+                            onToggleEnabled: (enabled) {
+                              streakBloc
+                                  .add(ToggleDailyStreakEnabledChanged(enabled));
+                            },
+                            onPointsChanged: (raw) {
+                              streakBloc.add(DailyStreakPointsChanged(raw));
+                            },
+                            onPresetSelected: (pts) {
+                              streakBloc.add(SelectDailyStreakPresetPoints(pts));
+                            },
+                            onSavePressed: () {
+                              FocusScope.of(context).unfocus();
+                              streakBloc
+                                  .add(const SaveDailyStreakSettingsRequested());
+                            },
+                            onViewAuditHistory: () {
+                              context.push(RouteNames.dailyStreakAuditRoute);
+                            },
+                            onRetryLoad: () {
+                              streakBloc
+                                  .add(const LoadDailyStreakSettingsRequested());
+                            },
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Central Points-to-Cash Valuation Card
+                      BlocBuilder<PointsToCashBloc, PointsToCashState>(
+                        builder: (context, rateState) {
+                          return PointsToCashCardWidget(
+                            state: rateState,
+                            onUpdateRatePressed: () {
+                              UpdatePointsToCashDialogWidget.show(
+                                context,
+                                bloc: rateBloc,
+                              );
+                            },
+                            onViewAuditHistory: () {
+                              context.push(RouteNames.pointsToCashAuditRoute);
+                            },
+                            onRetryLoad: () {
+                              rateBloc.add(
+                                const LoadPointsToCashConfigRequested(),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
 
                     // Section: Database & Backend
                     AppTexts.bold(
@@ -253,6 +356,7 @@ class SettingsView extends StatelessWidget {
           },
         ),
       ),
-    );
+    ),
+  );
   }
 }

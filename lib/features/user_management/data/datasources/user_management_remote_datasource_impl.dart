@@ -10,6 +10,72 @@ class UserManagementRemoteDatasourceImpl
 
   UserManagementRemoteDatasourceImpl({required this.supabaseClient});
 
+  Future<int> _getActivePointsPerRupee() async {
+    try {
+      final row = await supabaseClient
+          .from('reward_settings')
+          .select('points_per_rupee')
+          .eq('singleton_key', 'global')
+          .maybeSingle();
+      final val = (row?['points_per_rupee'] as num?)?.toInt() ?? 10;
+      return val > 0 ? val : 10;
+    } catch (_) {
+      return 10;
+    }
+  }
+
+  Future<List<CustomerModel>> _enrichCustomersWithWallets(
+    List<Map<String, dynamic>> profileRows,
+  ) async {
+    if (profileRows.isEmpty) return const [];
+
+    final ptsPerRupee = await _getActivePointsPerRupee();
+    final userIds = profileRows
+        .map((r) => r['id']?.toString() ?? '')
+        .where((id) => id.isNotEmpty)
+        .toList();
+
+    final Map<String, Map<String, dynamic>> walletsByUserId = {};
+    if (userIds.isNotEmpty) {
+      try {
+        final List<dynamic> walletRows = await supabaseClient
+            .from('customer_wallets')
+            .select(
+              'user_id, customer_code, membership_tier, available_points, locked_points, lifetime_earned_points',
+            )
+            .inFilter('user_id', userIds);
+
+        for (final w in walletRows) {
+          if (w is Map) {
+            final uid = w['user_id']?.toString() ?? '';
+            if (uid.isNotEmpty) {
+              walletsByUserId[uid] = Map<String, dynamic>.from(w);
+            }
+          }
+        }
+      } catch (e) {
+        AppLogger.warning('Could not batch-fetch customer wallets: $e');
+      }
+    }
+
+    return profileRows.map((row) {
+      final uid = row['id']?.toString() ?? '';
+      final wallet = walletsByUserId[uid];
+      final merged = <String, dynamic>{
+        ...row,
+        'points_per_rupee': ptsPerRupee,
+        if (wallet != null) ...{
+          'customer_code': wallet['customer_code'],
+          'membership_tier': wallet['membership_tier'],
+          'instant_points': wallet['available_points'] ?? 0,
+          'future_points': wallet['locked_points'] ?? 0,
+          'lifetime_earned_points': wallet['lifetime_earned_points'] ?? 0,
+        },
+      };
+      return CustomerModel.fromJson(merged);
+    }).toList();
+  }
+
   @override
   Future<List<CustomerModel>> getCustomers({
     String? status,
@@ -56,12 +122,68 @@ class UserManagementRemoteDatasourceImpl
       query = query.range(offset, offset + limit - 1);
 
       final List<dynamic> response = await query;
-      return response
-          .map((e) => CustomerModel.fromJson(e as Map<String, dynamic>))
+      final profileMaps = response
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
           .toList();
+
+      final customers = await _enrichCustomersWithWallets(profileMaps);
+
+      if (sortBy == 'points') {
+        customers.sort(
+          (a, b) => (b.instantPoints + b.futurePoints).compareTo(
+            a.instantPoints + a.futurePoints,
+          ),
+        );
+      }
+
+      return customers;
     } catch (e) {
       AppLogger.error('Failed to get customers: $e');
       throw Exception('Could not fetch customers: $e');
+    }
+  }
+
+  @override
+  Future<List<CustomerModel>> getTopEarners({
+    String range = 'weekly',
+    int limit = 3,
+  }) async {
+    final cleanRange = range.trim().toLowerCase();
+    try {
+      final response = await supabaseClient.rpc(
+        'get_user_management_top_earners',
+        params: {
+          'p_range': cleanRange,
+          'p_limit': limit,
+        },
+      );
+
+      if (response is List) {
+        return response
+            .whereType<Map>()
+            .map((e) => CustomerModel.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      }
+    } catch (rpcError) {
+      AppLogger.warning(
+        'get_user_management_top_earners RPC fallback ($cleanRange): $rpcError',
+      );
+    }
+
+    // Fallback: compute top earners from approved profiles + customer_wallets
+    try {
+      final customers = await getCustomers(status: 'approved', limit: 50);
+      final withPoints = customers
+          .where((c) => c.displayTopEarnerPoints > 0)
+          .toList()
+        ..sort(
+          (a, b) => b.displayTopEarnerPoints.compareTo(a.displayTopEarnerPoints),
+        );
+      return withPoints.take(limit).toList();
+    } catch (e) {
+      AppLogger.error('Failed to get top earners fallback: $e');
+      return const [];
     }
   }
 
@@ -111,7 +233,10 @@ class UserManagementRemoteDatasourceImpl
           .eq('id', customerId)
           .single();
 
-      return CustomerModel.fromJson(response);
+      final enriched = await _enrichCustomersWithWallets([
+        Map<String, dynamic>.from(response),
+      ]);
+      return enriched.first;
     } catch (e) {
       AppLogger.error('Failed to get customer details: $e');
       throw Exception('Could not load customer details: $e');
@@ -126,7 +251,6 @@ class UserManagementRemoteDatasourceImpl
     }
 
     try {
-      // 1. Try secure PostgreSQL RPC
       await supabaseClient.rpc(
         'approve_customer',
         params: {'customer_id': customerId},
@@ -135,7 +259,6 @@ class UserManagementRemoteDatasourceImpl
     } catch (rpcError) {
       AppLogger.warning('RPC approve_customer fallback: $rpcError');
 
-      // 2. Verify admin permission in admin_users
       final adminRecord = await supabaseClient
           .from('admin_users')
           .select('user_id')
@@ -172,7 +295,6 @@ class UserManagementRemoteDatasourceImpl
     }
 
     try {
-      // 1. Try secure PostgreSQL RPC
       await supabaseClient.rpc(
         'reject_customer',
         params: {
@@ -184,7 +306,6 @@ class UserManagementRemoteDatasourceImpl
     } catch (rpcError) {
       AppLogger.warning('RPC reject_customer fallback: $rpcError');
 
-      // 2. Verify admin permission in admin_users
       final adminRecord = await supabaseClient
           .from('admin_users')
           .select('user_id')

@@ -26,6 +26,17 @@ class UserManagementRepositoryImpl implements UserManagementRepository {
   }
 
   @override
+  Future<List<CustomerEntity>> getTopEarners({
+    String range = 'weekly',
+    int limit = 3,
+  }) {
+    return remoteDatasource.getTopEarners(
+      range: range,
+      limit: limit,
+    );
+  }
+
+  @override
   Future<UserStatisticsEntity> getUserStatistics() {
     return remoteDatasource.getUserStatistics();
   }

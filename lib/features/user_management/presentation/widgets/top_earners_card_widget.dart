@@ -4,11 +4,17 @@ import 'package:shiftexadmin/features/user_management/domain/entities/customer_e
 
 class TopEarnersCardWidget extends StatefulWidget {
   final List<CustomerEntity> customers;
+  final String selectedRange;
+  final bool isLoading;
+  final ValueChanged<String>? onRangeChanged;
   final ValueChanged<CustomerEntity>? onCustomerTapped;
 
   const TopEarnersCardWidget({
     super.key,
     required this.customers,
+    this.selectedRange = 'Weekly',
+    this.isLoading = false,
+    this.onRangeChanged,
     this.onCustomerTapped,
   });
 
@@ -17,14 +23,35 @@ class TopEarnersCardWidget extends StatefulWidget {
 }
 
 class TopEarnersCardWidgetState extends State<TopEarnersCardWidget> {
-  String selectedRange = 'Weekly';
+  late String _activeRange;
+
+  @override
+  void initState() {
+    super.initState();
+    _activeRange = widget.selectedRange;
+  }
+
+  @override
+  void didUpdateWidget(covariant TopEarnersCardWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedRange != oldWidget.selectedRange) {
+      _activeRange = widget.selectedRange;
+    }
+  }
+
+  List<CustomerEntity> _resolveTopEarners() {
+    final eligible = widget.customers
+        .where((c) => c.displayTopEarnerPoints > 0)
+        .toList()
+      ..sort(
+        (a, b) => b.displayTopEarnerPoints.compareTo(a.displayTopEarnerPoints),
+      );
+    return eligible.take(3).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Take top 3 verified or existing customers sorted by instant points or registration
-    final topList = widget.customers.isNotEmpty
-        ? widget.customers.take(3).toList()
-        : <CustomerEntity>[];
+    final topList = _resolveTopEarners();
 
     return Container(
       padding: const EdgeInsets.all(16.0),
@@ -49,32 +76,39 @@ class TopEarnersCardWidgetState extends State<TopEarnersCardWidget> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEDE9FE),
-                      borderRadius: BorderRadius.circular(8),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEDE9FE),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.emoji_events_outlined,
+                        size: 18,
+                        color: AppColors.purple,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.emoji_events_outlined,
-                      size: 18,
-                      color: AppColors.purple,
+                    const SizedBox(width: 8),
+                    const Flexible(
+                      child: Text(
+                        'Top Earners',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Top Earners',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(
@@ -82,6 +116,7 @@ class TopEarnersCardWidgetState extends State<TopEarnersCardWidget> {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     _buildRangeItem('Weekly'),
                     _buildRangeItem('Monthly'),
@@ -93,12 +128,26 @@ class TopEarnersCardWidgetState extends State<TopEarnersCardWidget> {
           ),
           const SizedBox(height: 14),
 
-          if (topList.isEmpty)
+          if (widget.isLoading)
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.linkBlue,
+                  ),
+                ),
+              ),
+            )
+          else if (topList.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
               child: Text(
-                'No earnings records available yet',
-                style: TextStyle(
+                'No earnings records available for $_activeRange',
+                style: const TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 12,
                   color: AppColors.textHint,
@@ -119,12 +168,14 @@ class TopEarnersCardWidgetState extends State<TopEarnersCardWidget> {
   }
 
   Widget _buildRangeItem(String range) {
-    final isSelected = selectedRange == range;
+    final isSelected = _activeRange.toLowerCase() == range.toLowerCase();
     return GestureDetector(
+      key: Key('top_earners_range_${range.toLowerCase()}'),
       onTap: () {
         setState(() {
-          selectedRange = range;
+          _activeRange = range;
         });
+        widget.onRangeChanged?.call(range);
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -161,6 +212,12 @@ class TopEarnersCardWidgetState extends State<TopEarnersCardWidget> {
       rankBg = const Color(0xFFFFEDD5);
       rankText = const Color(0xFFC2410C);
     }
+
+    final points = customer.displayTopEarnerPoints;
+    final rupees = customer.displayTopEarnerRupees;
+    final subtitleText = customer.earnedTxCount > 0
+        ? '${customer.formattedCustomerId} • ${customer.earnedTxCount} ${customer.earnedTxCount == 1 ? 'reward' : 'rewards'}'
+        : '${customer.formattedCustomerId} • Active member';
 
     return GestureDetector(
       onTap: () {
@@ -237,9 +294,11 @@ class TopEarnersCardWidgetState extends State<TopEarnersCardWidget> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const Text(
-                    'Active member',
-                    style: TextStyle(
+                  Text(
+                    subtitleText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 10.5,
                       color: AppColors.textHint,
@@ -248,13 +307,14 @@ class TopEarnersCardWidgetState extends State<TopEarnersCardWidget> {
                 ],
               ),
             ),
+            const SizedBox(width: 8),
 
-            // Points info
+            // Dynamic Points & INR info
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${customer.instantPoints > 0 ? customer.instantPoints : 2500 - (rank * 300)} pts',
+                  '$points pts',
                   style: const TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 13,
@@ -263,7 +323,7 @@ class TopEarnersCardWidgetState extends State<TopEarnersCardWidget> {
                   ),
                 ),
                 Text(
-                  '₹${customer.instantPoints > 0 ? customer.instantRupees.toStringAsFixed(2) : (250 - (rank * 30)).toStringAsFixed(2)}',
+                  '₹${rupees.toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 10.5,

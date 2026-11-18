@@ -14,9 +14,10 @@ class AdminMainShell extends StatelessWidget {
       bottomNavigationBar: AdminBottomNavBarWidget(
         currentIndex: navigationShell.currentIndex,
         onTabSelected: (index) {
+          final targetBranch = index == 99 ? 4 : index;
           navigationShell.goBranch(
-            index,
-            initialLocation: index == navigationShell.currentIndex,
+            targetBranch,
+            initialLocation: targetBranch == navigationShell.currentIndex,
           );
         },
       ),

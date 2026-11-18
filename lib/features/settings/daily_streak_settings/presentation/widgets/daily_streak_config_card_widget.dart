@@ -9,6 +9,7 @@ import 'package:shiftexadmin/features/settings/daily_streak_settings/presentatio
 
 class DailyStreakConfigCardWidget extends StatelessWidget {
   final DailyStreakSettingsState state;
+  final int? activePointsPerRupee;
   final ValueChanged<bool> onToggleEnabled;
   final ValueChanged<String> onPointsChanged;
   final ValueChanged<int> onPresetSelected;
@@ -19,6 +20,7 @@ class DailyStreakConfigCardWidget extends StatelessWidget {
   const DailyStreakConfigCardWidget({
     super.key,
     required this.state,
+    this.activePointsPerRupee,
     required this.onToggleEnabled,
     required this.onPointsChanged,
     required this.onPresetSelected,
@@ -29,22 +31,21 @@ class DailyStreakConfigCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isInitialLoading = !state.hasLoadedOnce &&
+    final isInitialLoading =
+        !state.hasLoadedOnce &&
         (state.status == DailyStreakSettingsStatus.initial ||
             state.status == DailyStreakSettingsStatus.loading);
     final isSaving = state.status == DailyStreakSettingsStatus.saving;
     final settings = state.settings;
-    final double rate = settings?.pointsToInrRate ?? 0.10;
+    final int pointsPerRupee =
+        activePointsPerRupee ?? settings?.effectivePointsPerRupee ?? 10;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.pureWhite,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFF1F5F9),
-          width: 1.2,
-        ),
+        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x060F172A),
@@ -157,7 +158,7 @@ class DailyStreakConfigCardWidget extends StatelessWidget {
           else ...[
             DailyStreakPointsInputWidget(
               pointsText: state.draftPointsInput,
-              pointsToInrRate: rate,
+              pointsPerRupee: pointsPerRupee,
               enabled: state.draftEnabled,
               validationError: state.validationError,
               onChanged: onPointsChanged,
@@ -181,7 +182,7 @@ class DailyStreakConfigCardWidget extends StatelessWidget {
 
             DailyStreakPerformanceCardWidget(
               statistics: state.statistics,
-              pointsToInrRate: rate,
+              pointsPerRupee: pointsPerRupee,
               isStreakEnabled: state.draftEnabled,
               onViewAuditHistory: onViewAuditHistory,
             ),
@@ -193,8 +194,9 @@ class DailyStreakConfigCardWidget extends StatelessWidget {
                 onPressed: isSaving ? null : onSavePressed,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.linkBlue,
-                  disabledBackgroundColor:
-                      AppColors.linkBlue.withValues(alpha: 0.55),
+                  disabledBackgroundColor: AppColors.linkBlue.withValues(
+                    alpha: 0.55,
+                  ),
                   foregroundColor: AppColors.pureWhite,
                   disabledForegroundColor: AppColors.pureWhite,
                   elevation: 0,

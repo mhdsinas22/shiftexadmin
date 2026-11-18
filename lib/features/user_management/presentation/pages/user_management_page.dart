@@ -21,20 +21,76 @@ import 'package:shiftexadmin/features/user_management/presentation/widgets/user_
 import 'package:shiftexadmin/features/user_management/presentation/widgets/user_statistics_grid_widget.dart';
 
 class UserManagementPage extends StatelessWidget {
-  const UserManagementPage({super.key});
+  final String? initialFilter;
+  final String? navigationNonce;
+
+  const UserManagementPage({
+    super.key,
+    this.initialFilter,
+    this.navigationNonce,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider<UserManagementBloc>(
       create: (_) =>
           sl<UserManagementBloc>()..add(const LoadUserManagementRequested()),
-      child: const UserManagementView(),
+      child: UserManagementView(
+        initialFilter: initialFilter,
+        navigationNonce: navigationNonce,
+      ),
     );
   }
 }
 
-class UserManagementView extends StatelessWidget {
-  const UserManagementView({super.key});
+class UserManagementView extends StatefulWidget {
+  final String? initialFilter;
+  final String? navigationNonce;
+
+  const UserManagementView({
+    super.key,
+    this.initialFilter,
+    this.navigationNonce,
+  });
+
+  @override
+  State<UserManagementView> createState() => _UserManagementViewState();
+}
+
+class _UserManagementViewState extends State<UserManagementView> {
+  String? _lastAppliedNonce;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _applyInitialFilter();
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant UserManagementView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialFilter != oldWidget.initialFilter ||
+        widget.navigationNonce != oldWidget.navigationNonce) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _applyInitialFilter();
+        }
+      });
+    }
+  }
+
+  void _applyInitialFilter() {
+    final filter = widget.initialFilter?.trim() ?? '';
+    if (filter.isEmpty) return;
+    final nonceKey = '$filter:${widget.navigationNonce ?? ''}';
+    if (_lastAppliedNonce == nonceKey) return;
+    _lastAppliedNonce = nonceKey;
+    context.read<UserManagementBloc>().add(FilterCustomersRequested(filter));
+  }
 
   void _onApprove(BuildContext context, CustomerEntity customer) {
     ApprovalConfirmationDialogWidget.show(
@@ -319,7 +375,17 @@ class UserManagementView extends StatelessWidget {
 
                       // Top Earners Card
                       TopEarnersCardWidget(
-                        customers: state.customers,
+                        customers: state.topEarners.isNotEmpty ||
+                                state.hasLoadedOnce
+                            ? state.topEarners
+                            : state.customers,
+                        selectedRange: state.topEarnersRange,
+                        isLoading: state.isLoadingTopEarners,
+                        onRangeChanged: (range) {
+                          context.read<UserManagementBloc>().add(
+                            ChangeTopEarnersRangeRequested(range),
+                          );
+                        },
                         onCustomerTapped: (customer) =>
                             _onReviewDetails(context, customer),
                       ),

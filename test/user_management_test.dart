@@ -8,6 +8,7 @@ import 'package:shiftexadmin/features/user_management/presentation/widgets/appro
 import 'package:shiftexadmin/features/user_management/presentation/widgets/customer_directory_card_shimmer_widget.dart';
 import 'package:shiftexadmin/features/user_management/presentation/widgets/customer_search_bar_widget.dart';
 import 'package:shiftexadmin/features/user_management/presentation/widgets/rejection_reason_dialog_widget.dart';
+import 'package:shiftexadmin/features/user_management/presentation/widgets/top_earners_card_widget.dart';
 import 'package:shiftexadmin/features/user_management/presentation/widgets/user_management_shimmer_widget.dart';
 import 'package:shiftexadmin/features/user_management/presentation/widgets/user_statistics_grid_widget.dart';
 
@@ -292,5 +293,88 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
       expect(find.byType(CustomerDirectoryCardShimmerWidget), findsNWidgets(2));
     });
+
+    testWidgets(
+      'TopEarnersCardWidget renders dynamic earned points and INR values and switches range tabs',
+      (WidgetTester tester) async {
+        final now = DateTime.now();
+        String selectedRange = 'Weekly';
+
+        final customers = [
+          CustomerEntity(
+            id: '81f63aaf-51d7-44f3-9cf2-77a1c35d5793',
+            fullName: 'mhd sinas p',
+            email: 'sinas@shiftex.in',
+            mobileNumber: '+919048551457',
+            approvalStatus: 'approved',
+            customerCode: 'SHFT-81F6',
+            earnedPoints: 355,
+            earnedRupees: 19.50,
+            earnedTxCount: 5,
+            instantPoints: 260,
+            instantRupees: 13.00,
+            createdAt: now,
+            updatedAt: now,
+          ),
+          CustomerEntity(
+            id: 'd15cb2e2-240c-46f7-bd5d-024058d9dea1',
+            fullName: 'haptic done',
+            email: 'haptic@shiftex.in',
+            mobileNumber: '+917034266250',
+            approvalStatus: 'approved',
+            customerCode: 'SHFT-D15C',
+            earnedPoints: 15,
+            earnedRupees: 1.50,
+            earnedTxCount: 1,
+            createdAt: now,
+            updatedAt: now,
+          ),
+          CustomerEntity(
+            id: '00000000-0000-0000-0000-000000000000',
+            fullName: 'Zero Points User',
+            email: 'zero@shiftex.in',
+            mobileNumber: '+910000000000',
+            approvalStatus: 'approved',
+            earnedPoints: 0,
+            instantPoints: 0,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ];
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: TopEarnersCardWidget(
+                customers: customers,
+                selectedRange: selectedRange,
+                onRangeChanged: (range) {
+                  selectedRange = range;
+                },
+              ),
+            ),
+          ),
+        );
+
+        expect(find.text('Top Earners'), findsOneWidget);
+        expect(find.text('mhd sinas p'), findsOneWidget);
+        expect(find.text('355 pts'), findsOneWidget);
+        expect(find.text('₹19.50'), findsOneWidget);
+        expect(find.text('haptic done'), findsOneWidget);
+        expect(find.text('15 pts'), findsOneWidget);
+        expect(find.text('₹1.50'), findsOneWidget);
+        // Zero-point user is not shown with fake 2200/1900 fallback points
+        expect(find.text('Zero Points User'), findsNothing);
+        expect(find.text('2200 pts'), findsNothing);
+
+        await tester.tap(find.byKey(const Key('top_earners_range_monthly')));
+        await tester.pump();
+        expect(selectedRange, 'Monthly');
+
+        await tester.tap(find.byKey(const Key('top_earners_range_all')));
+        await tester.pump();
+        expect(selectedRange, 'All');
+      },
+    );
   });
 }

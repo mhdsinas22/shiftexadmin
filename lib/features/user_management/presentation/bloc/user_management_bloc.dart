@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shiftexadmin/core/utils/app_logger.dart';
+import 'package:shiftexadmin/features/user_management/domain/entities/customer_entity.dart';
 import 'package:shiftexadmin/features/user_management/domain/usecases/approve_customer_usecase.dart';
 import 'package:shiftexadmin/features/user_management/domain/usecases/get_customer_details_usecase.dart';
 import 'package:shiftexadmin/features/user_management/domain/usecases/get_customers_usecase.dart';
+import 'package:shiftexadmin/features/user_management/domain/usecases/get_top_earners_usecase.dart';
 import 'package:shiftexadmin/features/user_management/domain/usecases/get_user_statistics_usecase.dart';
 import 'package:shiftexadmin/features/user_management/domain/usecases/reject_customer_usecase.dart';
 import 'package:shiftexadmin/features/user_management/presentation/bloc/user_management_event.dart';
@@ -16,6 +18,7 @@ class UserManagementBloc
   final ApproveCustomerUseCase approveCustomerUseCase;
   final RejectCustomerUseCase rejectCustomerUseCase;
   final GetCustomerDetailsUseCase getCustomerDetailsUseCase;
+  final GetTopEarnersUseCase? getTopEarnersUseCase;
 
   Timer? _debounceTimer;
 
@@ -25,11 +28,13 @@ class UserManagementBloc
     required this.approveCustomerUseCase,
     required this.rejectCustomerUseCase,
     required this.getCustomerDetailsUseCase,
+    this.getTopEarnersUseCase,
   }) : super(const UserManagementState()) {
     on<LoadUserManagementRequested>(_onLoadUserManagement);
     on<SearchCustomersRequested>(_onSearchCustomers);
     on<FilterCustomersRequested>(_onFilterCustomers);
     on<SortCustomersRequested>(_onSortCustomers);
+    on<ChangeTopEarnersRangeRequested>(_onChangeTopEarnersRange);
     on<ApproveCustomerRequested>(_onApproveCustomer);
     on<RejectCustomerRequested>(_onRejectCustomer);
     on<RefreshUserManagementRequested>(_onRefreshUserManagement);
@@ -40,6 +45,32 @@ class UserManagementBloc
   Future<void> close() {
     _debounceTimer?.cancel();
     return super.close();
+  }
+
+  Future<List<CustomerEntity>> _fetchTopEarners(
+    String range,
+    List<CustomerEntity> fallbackCustomers,
+  ) async {
+    if (getTopEarnersUseCase != null) {
+      try {
+        final earners = await getTopEarnersUseCase!.execute(
+          range: range.toLowerCase(),
+          limit: 3,
+        );
+        if (earners.isNotEmpty) {
+          return earners;
+        }
+      } catch (e) {
+        AppLogger.warning('Could not fetch top earners ($range): $e');
+      }
+    }
+    final fromCustomers = fallbackCustomers
+        .where((c) => c.isApproved && c.displayTopEarnerPoints > 0)
+        .toList()
+      ..sort(
+        (a, b) => b.displayTopEarnerPoints.compareTo(a.displayTopEarnerPoints),
+      );
+    return fromCustomers.take(3).toList();
   }
 
   Future<void> _onLoadUserManagement(
@@ -58,11 +89,16 @@ class UserManagementBloc
         searchQuery: state.searchQuery,
         sortBy: state.sortBy,
       );
+      final topEarners = await _fetchTopEarners(
+        state.topEarnersRange,
+        customers,
+      );
 
       emit(state.copyWith(
         status: UserManagementStatus.loaded,
         statistics: statistics,
         customers: customers,
+        topEarners: topEarners,
         errorMessage: '',
         hasLoadedOnce: true,
       ));
@@ -168,6 +204,32 @@ class UserManagementBloc
     }
   }
 
+  Future<void> _onChangeTopEarnersRange(
+    ChangeTopEarnersRangeRequested event,
+    Emitter<UserManagementState> emit,
+  ) async {
+    if (state.topEarnersRange == event.range && !state.isLoadingTopEarners) {
+      return;
+    }
+
+    emit(state.copyWith(
+      topEarnersRange: event.range,
+      isLoadingTopEarners: true,
+      clearSuccessMessage: true,
+    ));
+
+    try {
+      final topEarners = await _fetchTopEarners(event.range, state.customers);
+      emit(state.copyWith(
+        topEarners: topEarners,
+        isLoadingTopEarners: false,
+      ));
+    } catch (e) {
+      AppLogger.error('Error changing top earners range: $e');
+      emit(state.copyWith(isLoadingTopEarners: false));
+    }
+  }
+
   Future<void> _onApproveCustomer(
     ApproveCustomerRequested event,
     Emitter<UserManagementState> emit,
@@ -180,18 +242,23 @@ class UserManagementBloc
     try {
       await approveCustomerUseCase.execute(event.customerId);
 
-      // Refresh customers and statistics preserving filter & query
+      // Refresh customers, statistics & top earners preserving filter & query
       final statistics = await getUserStatisticsUseCase.execute();
       final customers = await getCustomersUseCase.execute(
         status: state.selectedFilter,
         searchQuery: state.searchQuery,
         sortBy: state.sortBy,
       );
+      final topEarners = await _fetchTopEarners(
+        state.topEarnersRange,
+        customers,
+      );
 
       emit(state.copyWith(
         status: UserManagementStatus.loaded,
         statistics: statistics,
         customers: customers,
+        topEarners: topEarners,
         successMessage: 'Customer approved successfully!',
         errorMessage: '',
       ));
@@ -216,18 +283,22 @@ class UserManagementBloc
     try {
       await rejectCustomerUseCase.execute(event.customerId, event.reason);
 
-      // Refresh customers and statistics preserving filter & query
       final statistics = await getUserStatisticsUseCase.execute();
       final customers = await getCustomersUseCase.execute(
         status: state.selectedFilter,
         searchQuery: state.searchQuery,
         sortBy: state.sortBy,
       );
+      final topEarners = await _fetchTopEarners(
+        state.topEarnersRange,
+        customers,
+      );
 
       emit(state.copyWith(
         status: UserManagementStatus.loaded,
         statistics: statistics,
         customers: customers,
+        topEarners: topEarners,
         successMessage: 'Customer rejected successfully.',
         errorMessage: '',
       ));
@@ -251,11 +322,16 @@ class UserManagementBloc
         searchQuery: state.searchQuery,
         sortBy: state.sortBy,
       );
+      final topEarners = await _fetchTopEarners(
+        state.topEarnersRange,
+        customers,
+      );
 
       emit(state.copyWith(
         status: UserManagementStatus.loaded,
         statistics: statistics,
         customers: customers,
+        topEarners: topEarners,
         errorMessage: '',
         hasLoadedOnce: true,
       ));

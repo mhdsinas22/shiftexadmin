@@ -9,11 +9,16 @@ class CustomerEntity {
   final String? rejectionReason;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String? customerCode;
+  final String? membershipTier;
   final int instantPoints;
   final double instantRupees;
   final int futurePoints;
   final String? futurePointsNote;
   final String? restrictedReason;
+  final int earnedPoints;
+  final double earnedRupees;
+  final int earnedTxCount;
 
   const CustomerEntity({
     required this.id,
@@ -26,11 +31,16 @@ class CustomerEntity {
     this.rejectionReason,
     required this.createdAt,
     required this.updatedAt,
+    this.customerCode,
+    this.membershipTier,
     this.instantPoints = 0,
     this.instantRupees = 0.0,
     this.futurePoints = 0,
     this.futurePointsNote,
     this.restrictedReason,
+    this.earnedPoints = 0,
+    this.earnedRupees = 0.0,
+    this.earnedTxCount = 0,
   });
 
   bool get isPending => approvalStatus.toLowerCase() == 'pending';
@@ -38,6 +48,12 @@ class CustomerEntity {
   bool get isRejected => approvalStatus.toLowerCase() == 'rejected';
   bool get isSuspended => approvalStatus.toLowerCase() == 'suspended';
   bool get isRestricted => isRejected || isSuspended;
+
+  int get displayTopEarnerPoints =>
+      earnedPoints > 0 ? earnedPoints : instantPoints;
+
+  double get displayTopEarnerRupees =>
+      earnedRupees > 0 ? earnedRupees : instantRupees;
 
   String get initials {
     final parts = fullName.trim().split(RegExp(r'\s+'));
@@ -49,6 +65,9 @@ class CustomerEntity {
   }
 
   String get formattedCustomerId {
+    if (customerCode != null && customerCode!.trim().isNotEmpty) {
+      return customerCode!.trim();
+    }
     if (id.length >= 8) {
       return 'SHFT-${id.substring(0, 4).toUpperCase()}';
     }
@@ -66,11 +85,16 @@ class CustomerEntity {
     String? rejectionReason,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? customerCode,
+    String? membershipTier,
     int? instantPoints,
     double? instantRupees,
     int? futurePoints,
     String? futurePointsNote,
     String? restrictedReason,
+    int? earnedPoints,
+    double? earnedRupees,
+    int? earnedTxCount,
   }) {
     return CustomerEntity(
       id: id ?? this.id,
@@ -83,11 +107,16 @@ class CustomerEntity {
       rejectionReason: rejectionReason ?? this.rejectionReason,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      customerCode: customerCode ?? this.customerCode,
+      membershipTier: membershipTier ?? this.membershipTier,
       instantPoints: instantPoints ?? this.instantPoints,
       instantRupees: instantRupees ?? this.instantRupees,
       futurePoints: futurePoints ?? this.futurePoints,
       futurePointsNote: futurePointsNote ?? this.futurePointsNote,
       restrictedReason: restrictedReason ?? this.restrictedReason,
+      earnedPoints: earnedPoints ?? this.earnedPoints,
+      earnedRupees: earnedRupees ?? this.earnedRupees,
+      earnedTxCount: earnedTxCount ?? this.earnedTxCount,
     );
   }
 }

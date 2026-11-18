@@ -12,12 +12,27 @@ class CustomerModel extends CustomerEntity {
     super.rejectionReason,
     required super.createdAt,
     required super.updatedAt,
+    super.customerCode,
+    super.membershipTier,
     super.instantPoints,
     super.instantRupees,
     super.futurePoints,
     super.futurePointsNote,
     super.restrictedReason,
+    super.earnedPoints,
+    super.earnedRupees,
+    super.earnedTxCount,
   });
+
+  static int _parseInt(dynamic raw, [int fallback = 0]) {
+    if (raw is num) return raw.toInt();
+    return int.tryParse(raw?.toString() ?? '') ?? fallback;
+  }
+
+  static double _parseDouble(dynamic raw, [double fallback = 0.0]) {
+    if (raw is num) return raw.toDouble();
+    return double.tryParse(raw?.toString() ?? '') ?? fallback;
+  }
 
   factory CustomerModel.fromJson(Map<String, dynamic> json) {
     final id = json['id'] as String? ?? '';
@@ -35,20 +50,59 @@ class CustomerModel extends CustomerEntity {
         ? DateTime.tryParse(approvedAtStr)
         : null;
 
-    final status = (json['approval_status'] as String? ?? 'pending').toLowerCase();
-    final instantPts = json['instant_points'] is num
-        ? (json['instant_points'] as num).toInt()
-        : (json['wallet'] is Map && json['wallet']['instant_points'] is num)
-            ? (json['wallet']['instant_points'] as num).toInt()
-            : 0;
+    final status = (json['approval_status'] as String? ?? 'pending')
+        .toLowerCase();
 
-    final futurePts = json['future_points'] is num
-        ? (json['future_points'] as num).toInt()
-        : (json['wallet'] is Map && json['wallet']['future_points'] is num)
-            ? (json['wallet']['future_points'] as num).toInt()
-            : 0;
+    final walletMap = json['wallet'] is Map
+        ? Map<String, dynamic>.from(json['wallet'] as Map)
+        : null;
 
-    final rupees = instantPts * 0.10;
+    final instantPts = json['instant_points'] != null
+        ? _parseInt(json['instant_points'])
+        : json['available_points'] != null
+        ? _parseInt(json['available_points'])
+        : walletMap != null
+        ? _parseInt(
+            walletMap['instant_points'] ?? walletMap['available_points'],
+          )
+        : 0;
+
+    final futurePts = json['future_points'] != null
+        ? _parseInt(json['future_points'])
+        : json['locked_points'] != null
+        ? _parseInt(json['locked_points'])
+        : walletMap != null
+        ? _parseInt(walletMap['future_points'] ?? walletMap['locked_points'])
+        : 0;
+
+    final ptsPerRupeeRaw = _parseInt(json['points_per_rupee'], 10);
+    final ptsPerRupee = ptsPerRupeeRaw > 0 ? ptsPerRupeeRaw : 10;
+
+    final rupees = json['instant_rupees'] != null
+        ? _parseDouble(json['instant_rupees'])
+        : double.parse((instantPts / ptsPerRupee).toStringAsFixed(2));
+
+    final earnedPts = json['earned_points'] != null
+        ? _parseInt(json['earned_points'])
+        : json['lifetime_earned_points'] != null
+        ? _parseInt(json['lifetime_earned_points'])
+        : walletMap != null && walletMap['lifetime_earned_points'] != null
+        ? _parseInt(walletMap['lifetime_earned_points'])
+        : instantPts + futurePts;
+
+    final earnedInr = json['earned_rupees'] != null
+        ? _parseDouble(json['earned_rupees'])
+        : double.parse((earnedPts / ptsPerRupee).toStringAsFixed(2));
+
+    final earnedTxCnt = _parseInt(json['earned_tx_count']);
+
+    final customerCode =
+        json['customer_code']?.toString() ??
+        walletMap?['customer_code']?.toString();
+
+    final membershipTier =
+        json['membership_tier']?.toString() ??
+        walletMap?['membership_tier']?.toString();
 
     String? futureNote;
     if (futurePts > 0) {
@@ -71,11 +125,16 @@ class CustomerModel extends CustomerEntity {
       rejectionReason: json['rejection_reason'] as String?,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      customerCode: customerCode,
+      membershipTier: membershipTier,
       instantPoints: instantPts,
       instantRupees: rupees,
       futurePoints: futurePts,
       futurePointsNote: futureNote,
       restrictedReason: restReason,
+      earnedPoints: earnedPts,
+      earnedRupees: earnedInr,
+      earnedTxCount: earnedTxCnt,
     );
   }
 
@@ -91,6 +150,14 @@ class CustomerModel extends CustomerEntity {
       'rejection_reason': rejectionReason,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'customer_code': customerCode,
+      'membership_tier': membershipTier,
+      'instant_points': instantPoints,
+      'instant_rupees': instantRupees,
+      'future_points': futurePoints,
+      'earned_points': earnedPoints,
+      'earned_rupees': earnedRupees,
+      'earned_tx_count': earnedTxCount,
     };
   }
 }

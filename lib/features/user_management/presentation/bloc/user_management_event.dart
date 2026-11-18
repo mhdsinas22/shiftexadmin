@@ -21,6 +21,11 @@ class SortCustomersRequested extends UserManagementEvent {
   const SortCustomersRequested(this.sortBy);
 }
 
+class ChangeTopEarnersRangeRequested extends UserManagementEvent {
+  final String range;
+  const ChangeTopEarnersRangeRequested(this.range);
+}
+
 class ApproveCustomerRequested extends UserManagementEvent {
   final String customerId;
   const ApproveCustomerRequested(this.customerId);

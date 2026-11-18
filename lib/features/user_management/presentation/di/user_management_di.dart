@@ -6,6 +6,7 @@ import 'package:shiftexadmin/features/user_management/domain/repositories/user_m
 import 'package:shiftexadmin/features/user_management/domain/usecases/approve_customer_usecase.dart';
 import 'package:shiftexadmin/features/user_management/domain/usecases/get_customer_details_usecase.dart';
 import 'package:shiftexadmin/features/user_management/domain/usecases/get_customers_usecase.dart';
+import 'package:shiftexadmin/features/user_management/domain/usecases/get_top_earners_usecase.dart';
 import 'package:shiftexadmin/features/user_management/domain/usecases/get_user_statistics_usecase.dart';
 import 'package:shiftexadmin/features/user_management/domain/usecases/reject_customer_usecase.dart';
 import 'package:shiftexadmin/features/user_management/presentation/bloc/user_management_bloc.dart';
@@ -20,6 +21,7 @@ void initUserManagementDependencies(GetIt sl) {
         approveCustomerUseCase: sl<ApproveCustomerUseCase>(),
         rejectCustomerUseCase: sl<RejectCustomerUseCase>(),
         getCustomerDetailsUseCase: sl<GetCustomerDetailsUseCase>(),
+        getTopEarnersUseCase: sl<GetTopEarnersUseCase>(),
       ),
     );
   }
@@ -28,6 +30,12 @@ void initUserManagementDependencies(GetIt sl) {
   if (!sl.isRegistered<GetCustomersUseCase>()) {
     sl.registerLazySingleton<GetCustomersUseCase>(
       () => GetCustomersUseCase(repository: sl<UserManagementRepository>()),
+    );
+  }
+
+  if (!sl.isRegistered<GetTopEarnersUseCase>()) {
+    sl.registerLazySingleton<GetTopEarnersUseCase>(
+      () => GetTopEarnersUseCase(repository: sl<UserManagementRepository>()),
     );
   }
 
