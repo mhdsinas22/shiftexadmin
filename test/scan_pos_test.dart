@@ -838,8 +838,9 @@ void main() {
       expect(find.text('Vishnu K.'), findsOneWidget);
       expect(find.text('Points Allocation'), findsOneWidget);
       expect(find.text('Recent Scan History'), findsOneWidget);
-      expect(find.textContaining('+₹18.00'), findsOneWidget);
+      expect(find.textContaining('+180 pts'), findsOneWidget);
       expect(find.text('Completed'), findsOneWidget);
+      expect(find.textContaining('₹'), findsNothing);
       expect(tester.takeException(), isNull);
 
       // Compact mobile viewport (320px)
@@ -873,9 +874,10 @@ void main() {
       );
       expect(find.text('Token signature valid'), findsOneWidget);
       expect(
-        find.text('Confirm Redemption & Hand Over (₹20.00)'),
+        find.text('Confirm Redemption (200 pts)'),
         findsOneWidget,
       );
+      expect(find.textContaining('₹'), findsNothing);
       expect(find.text('Reject or Flag Token'), findsOneWidget);
       expect(tester.takeException(), isNull);
 
@@ -927,7 +929,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tapping Confirm & Allocate when Bill # is empty must show validation feedback, not do nothing
-      final confirmBtn = find.text('Confirm & Allocate 300 pts (₹30.00)');
+      final confirmBtn = find.text('Confirm & Allocate 300 pts');
       expect(confirmBtn, findsOneWidget);
       await tester.ensureVisible(confirmBtn);
       await tester.pump();
@@ -972,11 +974,12 @@ void main() {
       expect(find.textContaining('2,700', findRichText: true), findsOneWidget);
       expect(find.textContaining('600', findRichText: true), findsWidgets);
       // Form inputs cleared after commit
-      expect(find.text('Confirm & Allocate 0 pts (₹0.00)'), findsOneWidget);
+      expect(find.text('Confirm & Allocate 0 pts'), findsOneWidget);
       expect(
-        find.textContaining('Allocated 300 pts (₹30.00) to Vishnu K.'),
+        find.textContaining('Allocated 300 pts to Vishnu K.'),
         findsWidgets,
       );
+      expect(find.textContaining('₹'), findsNothing);
       expect(tester.takeException(), isNull);
     });
   });

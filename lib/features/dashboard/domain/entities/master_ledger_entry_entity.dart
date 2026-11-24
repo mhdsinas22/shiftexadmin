@@ -78,6 +78,12 @@ class MasterLedgerEntryEntity {
 
   String get formattedSubValue {
     if (isAutoBonus) return 'Auto-Bonus';
-    return '₹${inrValue.toStringAsFixed(2)}';
+    final cleanBill = billNumber.trim();
+    if (cleanBill.isNotEmpty) {
+      return cleanBill.toLowerCase().startsWith('bill')
+          ? cleanBill
+          : 'Bill #$cleanBill';
+    }
+    return isRedemption ? 'Points Redeemed' : 'Points Credited';
   }
 }

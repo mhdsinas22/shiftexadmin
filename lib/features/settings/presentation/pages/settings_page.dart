@@ -17,9 +17,7 @@ import 'package:shiftexadmin/features/settings/daily_streak_settings/presentatio
 import 'package:shiftexadmin/features/settings/points_to_cash/presentation/bloc/points_to_cash_bloc.dart';
 import 'package:shiftexadmin/features/settings/points_to_cash/presentation/bloc/points_to_cash_event.dart';
 import 'package:shiftexadmin/features/settings/points_to_cash/presentation/bloc/points_to_cash_state.dart';
-import 'package:shiftexadmin/features/settings/points_to_cash/presentation/widgets/update_points_to_cash_dialog_widget.dart';
 import 'package:shiftexadmin/features/settings/presentation/widgets/admin_identity_card_widget.dart';
-import 'package:shiftexadmin/features/settings/presentation/widgets/points_to_cash_card_widget.dart';
 import 'package:shiftexadmin/features/settings/presentation/widgets/settings_header_widget.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -97,6 +95,7 @@ class SettingsView extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
+        bottom: false,
         child: MultiBlocListener(
           listeners: [
             BlocListener<DailyStreakSettingsBloc, DailyStreakSettingsState>(
@@ -261,11 +260,53 @@ class SettingsView extends StatelessWidget {
                   ),
                   keyboardDismissBehavior:
                       ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 24.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SettingsHeaderWidget(),
+                      BlocBuilder<AdminAccessBloc, AdminAccessState>(
+                        buildWhen: (prev, curr) =>
+                            prev.currentAdmin != curr.currentAdmin,
+                        builder: (context, accessState) {
+                          return SettingsHeaderWidget(
+                            profileInitials: accessState.currentAdmin?.initials,
+                            onNotificationPressed: () {
+                              streakBloc.add(
+                                const RefreshDailyStreakSettingsRequested(),
+                              );
+                              rateBloc.add(
+                                const RefreshPointsToCashConfigRequested(),
+                              );
+                              adminAccessBloc.add(
+                                const RefreshAdminAccessRequested(),
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Settings & terminal rules synced.',
+                                  ),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            },
+                            onProfilePressed: () {
+                              adminAccessBloc.add(
+                                const RefreshAdminAccessRequested(),
+                              );
+                              final name =
+                                  accessState.currentAdmin?.fullName ??
+                                  user?.email ??
+                                  'Admin Operator';
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Signed in as $name'),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
                       const SizedBox(height: 16),
 
                       // Admin Identity Card synced with AdminAccessBloc
@@ -316,30 +357,6 @@ class SettingsView extends StatelessWidget {
                             onRetryLoad: () {
                               streakBloc.add(
                                 const LoadDailyStreakSettingsRequested(),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Central Points-to-Cash Valuation Card
-                      BlocBuilder<PointsToCashBloc, PointsToCashState>(
-                        builder: (context, rateState) {
-                          return PointsToCashCardWidget(
-                            state: rateState,
-                            onUpdateRatePressed: () {
-                              UpdatePointsToCashDialogWidget.show(
-                                context,
-                                bloc: rateBloc,
-                              );
-                            },
-                            onViewAuditHistory: () {
-                              context.push(RouteNames.pointsToCashAuditRoute);
-                            },
-                            onRetryLoad: () {
-                              rateBloc.add(
-                                const LoadPointsToCashConfigRequested(),
                               );
                             },
                           );

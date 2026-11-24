@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shiftexadmin/core/constants/app_colors.dart';
 import 'package:shiftexadmin/core/di/injection_container.dart';
+import 'package:shiftexadmin/core/routes/route_names.dart';
 import 'package:shiftexadmin/features/ads/presentation/bloc/advertisement_bloc.dart';
 import 'package:shiftexadmin/features/ads/presentation/bloc/advertisement_event.dart';
 import 'package:shiftexadmin/features/ads/presentation/bloc/advertisement_state.dart';
@@ -37,6 +39,7 @@ class AdsPageView extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
+        bottom: false,
         child: BlocConsumer<AdvertisementBloc, AdvertisementState>(
           listenWhen: (previous, current) {
             return previous.errorMessage != current.errorMessage ||
@@ -78,10 +81,7 @@ class AdsPageView extends StatelessWidget {
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: BouncingScrollPhysics(),
                 ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -91,20 +91,19 @@ class AdsPageView extends StatelessWidget {
                         bloc.add(const ToggleQuickCreateEvent());
                       },
                       onNotificationPressed: () {
+                        bloc.add(const LoadAdvertisementsEvent());
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Notifications (ShiftEx System)'),
+                            content: Text('Ad campaigns & metrics synced.'),
                             behavior: SnackBarBehavior.floating,
                           ),
                         );
                       },
                       onProfilePressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Logged in as Admin'),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
+                        final router = GoRouter.maybeOf(context);
+                        if (router != null) {
+                          router.go(RouteNames.settingsRoute);
+                        }
                       },
                     ),
                     const SizedBox(height: 16),

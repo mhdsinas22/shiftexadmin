@@ -310,7 +310,7 @@ class CustomerDirectoryCardWidget extends StatelessWidget {
                               customer.isRestricted
                                   ? 'Redemptions paused'
                                   : customer.instantPoints > 0
-                                      ? '= ₹${customer.instantRupees.toStringAsFixed(2)} ready'
+                                      ? 'Ready to claim'
                                       : 'Zero claimed',
                               style: TextStyle(
                                 fontFamily: 'Inter',

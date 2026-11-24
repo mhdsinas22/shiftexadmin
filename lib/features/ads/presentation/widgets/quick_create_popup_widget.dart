@@ -491,7 +491,7 @@ class _QuickCreatePopupWidgetState extends State<QuickCreatePopupWidget> {
                     ),
                     decoration: InputDecoration(
                       hintText:
-                          'Earn 2X bonus reward points on any order above ₹499 across all partner roasteries',
+                          'Earn 2X bonus reward points on all partner check-ins across SHIIFTEX',
                       hintStyle: const TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 12.5,

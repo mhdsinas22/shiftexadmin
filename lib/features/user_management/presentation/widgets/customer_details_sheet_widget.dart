@@ -191,9 +191,9 @@ class CustomerDetailsSheetWidget extends StatelessWidget {
                             color: AppColors.textPrimary,
                           ),
                         ),
-                        Text(
-                          '= ₹${customer.instantRupees.toStringAsFixed(2)} available',
-                          style: const TextStyle(
+                        const Text(
+                          'Available to claim',
+                          style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 11,
                             fontWeight: FontWeight.w600,

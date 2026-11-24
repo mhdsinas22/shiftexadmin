@@ -208,7 +208,6 @@ class TopEarnersCardWidgetState extends State<TopEarnersCardWidget> {
     }
 
     final points = customer.displayTopEarnerPoints;
-    final rupees = customer.displayTopEarnerRupees;
     final subtitleText = customer.earnedTxCount > 0
         ? '${customer.formattedCustomerId} • ${customer.earnedTxCount} ${customer.earnedTxCount == 1 ? 'reward' : 'rewards'}'
         : '${customer.formattedCustomerId} • Active member';
@@ -300,7 +299,7 @@ class TopEarnersCardWidgetState extends State<TopEarnersCardWidget> {
             ),
             const SizedBox(width: 8),
 
-            // Dynamic Points & INR info
+            // Dynamic Points info
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -314,12 +313,14 @@ class TopEarnersCardWidgetState extends State<TopEarnersCardWidget> {
                   ),
                 ),
                 Text(
-                  '₹${rupees.toStringAsFixed(2)}',
-                  style: const TextStyle(
+                  rank == 1 ? 'Top Earner' : 'Total Earned',
+                  style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 10.5,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.linkBlue,
+                    color: rank == 1
+                        ? const Color(0xFF15803D)
+                        : AppColors.linkBlue,
                   ),
                 ),
               ],

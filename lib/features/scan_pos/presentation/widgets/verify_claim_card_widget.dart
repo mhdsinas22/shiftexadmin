@@ -148,7 +148,6 @@ class _VerifyClaimCardWidgetState extends State<VerifyClaimCardWidget> {
         widget.state.verifyClaimStatus == VerifyClaimStatus.expired;
     final allChecksPassed = customer.auditChecks.allChecksPassed && !isExpired;
     final redeemPts = widget.state.redeemPoints;
-    final redeemInr = widget.state.redeemInr.toStringAsFixed(2);
     final availablePts = customer.availablePoints;
     final exceedsBalance = redeemPts > availablePts;
     final hasValidBill = widget.state.billNumberInput.trim().length >= 2;
@@ -365,9 +364,9 @@ class _VerifyClaimCardWidgetState extends State<VerifyClaimCardWidget> {
                       color: const Color(0xFFEFF6FF),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text(
-                      '${customer.pointsPerRupee} pts = ₹1.00',
-                      style: const TextStyle(
+                    child: const Text(
+                      'Single-Use Claim',
+                      style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 10.5,
                         fontWeight: FontWeight.w700,
@@ -430,7 +429,7 @@ class _VerifyClaimCardWidgetState extends State<VerifyClaimCardWidget> {
                   Expanded(
                     flex: 4,
                     child: Text(
-                      'Discount: ₹$redeemInr',
+                      '$redeemPts pts Deduction',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.right,
@@ -592,7 +591,7 @@ class _VerifyClaimCardWidgetState extends State<VerifyClaimCardWidget> {
             label: Text(
               isProcessing
                   ? 'Processing Redemption...'
-                  : 'Confirm Redemption & Hand Over (₹$redeemInr)',
+                  : 'Confirm Redemption ($redeemPts pts)',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(

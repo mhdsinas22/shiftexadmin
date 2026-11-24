@@ -80,6 +80,9 @@ class DashboardStatisticsEntity {
 
   String get formattedNetValueInr => formatCurrencyInr(netValueInr);
 
+  String get formattedTotalPointsGiven =>
+      '${formatCompactPoints(totalPointsGiven)} pts';
+
   String get formattedPointsGivenSubtitle =>
       '≈ ${formatCompactPoints(totalPointsGiven)} pts given';
 
@@ -88,8 +91,12 @@ class DashboardStatisticsEntity {
   String get formattedLiquidPoolSubtitle =>
       '≈ ${formatCurrencyInr(liquidPoolInr)} pool';
 
+  String get formattedLiquidPoolPointsSubtitle => 'Active instant balance';
+
   String get formattedLockedPoints => '${formatIndianNumber(lockedPoints)} pts';
 
   String get formattedLockedPoolSubtitle =>
       '≈ ${formatCurrencyInr(lockedPoolInr)} locked';
+
+  String get formattedLockedPoolPointsSubtitle => 'Scheduled future unlock';
 }

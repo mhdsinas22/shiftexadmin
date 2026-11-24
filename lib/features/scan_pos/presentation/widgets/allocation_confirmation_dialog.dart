@@ -72,7 +72,7 @@ class AllocationConfirmationDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Allocate $total pts (₹${totalInr.toStringAsFixed(2)}) to ${customer.fullName} (${customer.membershipId})?',
+            'Allocate $total pts to ${customer.fullName} (${customer.membershipId})?',
             style: const TextStyle(
               fontFamily: 'Inter',
               fontSize: 13.5,

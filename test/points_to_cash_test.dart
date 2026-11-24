@@ -824,17 +824,17 @@ void main() {
         );
         await tester.pump();
 
-        expect(find.text('Rate: 20 pts = ₹1.00'), findsOneWidget);
-        expect(find.text('₹12.50 immediate'), findsOneWidget);
-        expect(find.text('₹2.50 locked'), findsOneWidget);
+        expect(find.text('Instant & Future Pts'), findsOneWidget);
+        expect(find.text('Immediate credit'), findsOneWidget);
+        expect(find.text('Locked until unlock'), findsOneWidget);
         expect(
-          find.text('Confirm & Allocate 300 pts (₹15.00)'),
+          find.text('Confirm & Allocate 300 pts'),
           findsOneWidget,
         );
 
-        // Historical item still preserves +₹18.00 at 10 pts=₹1 snapshot
-        expect(find.text('+₹18.00'), findsOneWidget);
-        expect(find.textContaining('10 pts=₹1'), findsOneWidget);
+        // Historical item shows points-only without currency symbol
+        expect(find.text('+180 pts'), findsOneWidget);
+        expect(find.textContaining('₹'), findsNothing);
         expect(tester.takeException(), isNull);
 
         await tester.runAsync(() async {

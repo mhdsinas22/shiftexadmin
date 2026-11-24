@@ -62,10 +62,9 @@ class WalletBalanceCard extends StatelessWidget {
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      TextSpan(
-                        text:
-                            ' pts (≈ ₹${customer.availableRupees.toStringAsFixed(2)})',
-                        style: const TextStyle(
+                      const TextSpan(
+                        text: ' pts',
+                        style: TextStyle(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w500,
                           color: AppColors.textSecondary,

@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:shiftexadmin/core/constants/app_colors.dart';
 import 'package:shiftexadmin/core/constants/app_texts.dart';
-import 'package:shiftexadmin/features/authentication/presentation/widgets/login_logo_widget.dart';
+import 'package:shiftexadmin/core/widgets/admin_top_app_bar_widget.dart';
 
 class UserManagementHeaderWidget extends StatelessWidget {
+  final bool hasUnreadNotifications;
   final VoidCallback? onNotificationPressed;
   final VoidCallback? onProfilePressed;
   final VoidCallback? onAddUserPressed;
 
   const UserManagementHeaderWidget({
     super.key,
+    this.hasUnreadNotifications = false,
     this.onNotificationPressed,
     this.onProfilePressed,
     this.onAddUserPressed,
@@ -20,83 +22,15 @@ class UserManagementHeaderWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Top branding bar
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const LoginLogoWidget(
-              size: 38,
-              iconSize: 20,
-            ),
-            Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: AppColors.pureWhite,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFFF1F5F9),
-                      width: 1.2,
-                    ),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x080F172A),
-                        blurRadius: 6,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    icon: const Icon(
-                      Icons.notifications_none_rounded,
-                      size: 20,
-                      color: AppColors.darkNavy,
-                    ),
-                    onPressed: onNotificationPressed ?? () {},
-                  ),
-                ),
-                const SizedBox(width: 10),
-                GestureDetector(
-                  onTap: onProfilePressed ?? () {},
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFF475569),
-                      border: Border.all(
-                        color: AppColors.pureWhite,
-                        width: 2,
-                      ),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x0C0F172A),
-                          blurRadius: 6,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'AD',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.pureWhite,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+        // Top branding bar consistent with Dashboard AppBar
+        AdminTopAppBarWidget(
+          hasUnreadNotifications: hasUnreadNotifications,
+          notificationButtonKey: const Key('users_notification_button'),
+          profileButtonKey: const Key('users_profile_button'),
+          onNotificationPressed: onNotificationPressed,
+          onProfilePressed: onProfilePressed,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 18),
 
         // Title and + Add User Row
         Row(

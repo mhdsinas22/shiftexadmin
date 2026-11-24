@@ -151,7 +151,7 @@ class LoginFormWidgetState extends State<LoginFormWidget> {
           if (widget.onLoginSuccess != null) {
             widget.onLoginSuccess!();
           } else {
-            context.go(RouteNames.userManagementRoute);
+            context.go(RouteNames.dashboardRoute);
           }
         } else if (state.errorMessage.isNotEmpty &&
             (state.status == AuthenticationStatus.unauthenticated ||

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shiftexadmin/core/constants/app_colors.dart';
-import 'package:shiftexadmin/features/settings/points_to_cash/domain/entities/points_to_cash_config_entity.dart';
 
 class DailyStreakPointsInputWidget extends StatefulWidget {
   final String pointsText;
@@ -53,11 +52,6 @@ class _DailyStreakPointsInputWidgetState
 
   @override
   Widget build(BuildContext context) {
-    final parsed = int.tryParse(widget.pointsText.trim()) ?? 0;
-    final inrEquivalent = PointsToCashConfigEntity.inrFromPoints(
-      points: parsed,
-      pointsPerRupee: widget.pointsPerRupee,
-    ).toStringAsFixed(2);
     final hasError = widget.validationError != null;
 
     return Column(
@@ -129,13 +123,13 @@ class _DailyStreakPointsInputWidgetState
                 ),
               ),
               const SizedBox(width: 8),
-              Expanded(
+              const Expanded(
                 child: Text(
-                  '≈ ₹$inrEquivalent INR / login',
+                  'Points / login',
                   textAlign: TextAlign.right,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 11.5,
                     fontWeight: FontWeight.w500,

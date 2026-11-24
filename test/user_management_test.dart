@@ -359,10 +359,11 @@ void main() {
         expect(find.text('Top Earners'), findsOneWidget);
         expect(find.text('mhd sinas p'), findsOneWidget);
         expect(find.text('355 pts'), findsOneWidget);
-        expect(find.text('₹19.50'), findsOneWidget);
+        expect(find.text('Top Earner'), findsOneWidget);
         expect(find.text('haptic done'), findsOneWidget);
         expect(find.text('15 pts'), findsOneWidget);
-        expect(find.text('₹1.50'), findsOneWidget);
+        expect(find.text('Total Earned'), findsOneWidget);
+        expect(find.textContaining('₹'), findsNothing);
         // Zero-point user is not shown with fake 2200/1900 fallback points
         expect(find.text('Zero Points User'), findsNothing);
         expect(find.text('2200 pts'), findsNothing);

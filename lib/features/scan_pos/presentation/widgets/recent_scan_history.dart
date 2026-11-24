@@ -173,17 +173,12 @@ class PosTransactionTileWidget extends StatelessWidget {
         ? transaction.tokenCode!
         : transaction.membershipId;
 
-    final String rateTag =
-        (transaction.pointsPerRupee != null && transaction.pointsPerRupee! > 0)
-        ? ' • ${transaction.pointsPerRupee} pts=₹1'
-        : '';
-
     final String subtitleText;
     if (isRedemption) {
       final pts = transaction.pointsDelta.abs();
       subtitleText = transaction.title.isNotEmpty
-          ? '${transaction.title}$rateTag'
-          : 'Redeemed $pts pts$rateTag${transaction.billNumber != null ? ' • ${transaction.billNumber}' : ''}';
+          ? transaction.title
+          : 'Redeemed $pts pts${transaction.billNumber != null ? ' • ${transaction.billNumber}' : ''}';
     } else {
       final pts = transaction.pointsDelta.abs();
       final billPart =
@@ -191,15 +186,15 @@ class PosTransactionTileWidget extends StatelessWidget {
               transaction.billNumber!.trim().isNotEmpty)
           ? ' • ${transaction.billNumber}'
           : '';
-      subtitleText = 'Allocated $pts pts$rateTag$billPart';
+      subtitleText = 'Allocated $pts pts$billPart';
     }
 
-    final inrText = transaction.inrEquivalent.toStringAsFixed(2);
+    final ptsAbs = transaction.pointsDelta.abs();
     final trailingLabel = isRedemption
         ? (transaction.status.toLowerCase() == 'completed'
               ? 'Completed'
               : transaction.status)
-        : '+₹$inrText';
+        : '+$ptsAbs pts';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),

@@ -431,10 +431,10 @@ void main() {
         expect(model.statistics.activePointsPerRupee, 20);
         expect(model.statistics.liquidPoints, 260);
         expect(model.statistics.liquidPoolInr, 13.0);
-        // Historical ledger entry retains its original ₹25.00 snapshot at 10 pts = ₹1
+        // Historical ledger entry retains its original snapshot & shows points-only subvalue
         expect(model.masterLedger.single.pointsPerRupee, 10);
         expect(model.masterLedger.single.inrValue, 25.00);
-        expect(model.masterLedger.single.formattedSubValue, '₹25.00');
+        expect(model.masterLedger.single.formattedSubValue, 'Points Credited');
       },
     );
   });
@@ -638,12 +638,14 @@ void main() {
           findsOneWidget,
         );
 
-        // 3) 4 Statistics Cards
+        // 3) 4 Statistics Cards (Points-only, zero currency)
         expect(find.text('4,892'), findsOneWidget);
         expect(find.text('+12.4%'), findsOneWidget);
-        expect(find.text('₹1,48,250'), findsOneWidget);
+        expect(find.text('Points Given'), findsOneWidget);
+        expect(find.text('14.8L pts'), findsOneWidget);
         expect(find.text('8,42,190 pts'), findsOneWidget);
         expect(find.text('2,18,400 pts'), findsOneWidget);
+        expect(find.textContaining('₹'), findsNothing);
 
         // 4) User Verifications
         expect(find.text('User Verifications'), findsOneWidget);

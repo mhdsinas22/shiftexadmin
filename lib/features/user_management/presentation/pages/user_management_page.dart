@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shiftexadmin/core/constants/app_colors.dart';
 import 'package:shiftexadmin/core/di/injection_container.dart';
+import 'package:shiftexadmin/core/routes/route_names.dart';
 import 'package:shiftexadmin/features/user_management/domain/entities/customer_entity.dart';
 import 'package:shiftexadmin/features/user_management/presentation/bloc/user_management_bloc.dart';
 import 'package:shiftexadmin/features/user_management/presentation/bloc/user_management_event.dart';
@@ -133,6 +135,7 @@ class _UserManagementViewState extends State<UserManagementView> {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
+        bottom: false,
         child: BlocConsumer<UserManagementBloc, UserManagementState>(
           listener: (context, state) {
             if (state.successMessage != null &&
@@ -213,17 +216,32 @@ class _UserManagementViewState extends State<UserManagementView> {
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: BouncingScrollPhysics(),
                 ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 16.0,
-                ),
+                padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 24.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header Bar
                     UserManagementHeaderWidget(
-                      onNotificationPressed: () {},
-                      onProfilePressed: () {},
+                      hasUnreadNotifications: state.statistics.pendingCount > 0,
+                      onNotificationPressed: () {
+                        context.read<UserManagementBloc>().add(
+                          const RefreshUserManagementRequested(),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'User directory & verifications synced.',
+                            ),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      onProfilePressed: () {
+                        final router = GoRouter.maybeOf(context);
+                        if (router != null) {
+                          router.go(RouteNames.settingsRoute);
+                        }
+                      },
                       onAddUserPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(

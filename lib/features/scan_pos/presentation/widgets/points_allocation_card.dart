@@ -98,9 +98,7 @@ class _PointsAllocationCardState extends State<PointsAllocationCard> {
 
   @override
   Widget build(BuildContext context) {
-    final String baseRatePts = widget.state.pointsPerRupee.toString();
     final totalPts = widget.state.totalAllocationPoints;
-    final totalInr = widget.state.totalAllocationInr.toStringAsFixed(2);
     final isAllocating = widget.state.status == ScanPosStatus.allocating;
     final showBillError =
         widget.state.status == ScanPosStatus.error &&
@@ -109,11 +107,11 @@ class _PointsAllocationCardState extends State<PointsAllocationCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section Title + Rate
-        Row(
+        // Section Title
+        const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Expanded(
+            Expanded(
               child: Text(
                 'Points Allocation',
                 maxLines: 1,
@@ -126,14 +124,14 @@ class _PointsAllocationCardState extends State<PointsAllocationCard> {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Flexible(
               child: Text(
-                'Rate: $baseRatePts pts = ₹1.00',
+                'Instant & Future Pts',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.right,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 11.5,
                   fontWeight: FontWeight.w500,
@@ -230,11 +228,11 @@ class _PointsAllocationCardState extends State<PointsAllocationCard> {
                       ],
                     ),
                     const SizedBox(height: 6),
-                    Text(
-                      '₹${widget.state.instantInr.toStringAsFixed(2)} immediate',
+                    const Text(
+                      'Immediate credit',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -328,11 +326,11 @@ class _PointsAllocationCardState extends State<PointsAllocationCard> {
                       ],
                     ),
                     const SizedBox(height: 6),
-                    Text(
-                      '₹${widget.state.futureInr.toStringAsFixed(2)} locked',
+                    const Text(
+                      'Locked until unlock',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -593,7 +591,7 @@ class _PointsAllocationCardState extends State<PointsAllocationCard> {
             label: Text(
               isAllocating
                   ? 'Allocating Points...'
-                  : 'Confirm & Allocate $totalPts pts (₹$totalInr)',
+                  : 'Confirm & Allocate $totalPts pts',
               style: const TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 13.5,

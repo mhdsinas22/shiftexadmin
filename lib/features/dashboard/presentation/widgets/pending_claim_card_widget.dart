@@ -199,7 +199,7 @@ class _PendingClaimCardWidgetState extends State<PendingClaimCardWidget> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      claim.formattedDiscountInr,
+                      claim.formattedPoints,
                       style: const TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 14,
@@ -208,9 +208,9 @@ class _PendingClaimCardWidgetState extends State<PendingClaimCardWidget> {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      claim.formattedPoints,
-                      style: const TextStyle(
+                    const Text(
+                      'Points Claim',
+                      style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 11.5,
                         fontWeight: FontWeight.w500,

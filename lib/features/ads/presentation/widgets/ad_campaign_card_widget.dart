@@ -389,7 +389,7 @@ class AdCampaignCardWidget extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildThumbnail(badgeText: '₹50 OFF'),
+              _buildThumbnail(badgeText: '2X PTS'),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(

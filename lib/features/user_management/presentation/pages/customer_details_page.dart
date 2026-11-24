@@ -14,10 +14,7 @@ import 'package:shiftexadmin/features/user_management/presentation/widgets/rejec
 class CustomerDetailsPage extends StatelessWidget {
   final CustomerEntity customer;
 
-  const CustomerDetailsPage({
-    super.key,
-    required this.customer,
-  });
+  const CustomerDetailsPage({super.key, required this.customer});
 
   String _formatDateTime(DateTime dt) {
     return '${dt.day}/${dt.month}/${dt.year} at ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
@@ -29,25 +26,24 @@ class CustomerDetailsPage extends StatelessWidget {
       customer: customer,
       onConfirm: () {
         context.read<UserManagementBloc>().add(
-              ApproveCustomerRequested(customer.id),
-            );
+          ApproveCustomerRequested(customer.id),
+        );
         context.pop();
       },
     );
   }
 
   void _handleReject(BuildContext context) {
-    RejectionReasonDialogWidget.show(
-      context,
-      customer: customer,
-    ).then((reason) {
+    RejectionReasonDialogWidget.show(context, customer: customer).then((
+      reason,
+    ) {
       if (reason != null && reason.trim().isNotEmpty && context.mounted) {
         context.read<UserManagementBloc>().add(
-              RejectCustomerRequested(
-                customerId: customer.id,
-                reason: reason.trim(),
-              ),
-            );
+          RejectCustomerRequested(
+            customerId: customer.id,
+            reason: reason.trim(),
+          ),
+        );
         context.pop();
       }
     });
@@ -75,10 +71,7 @@ class CustomerDetailsPage extends StatelessWidget {
         ),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(
-            height: 1,
-            color: Color(0xFFF1F5F9),
-          ),
+          child: Divider(height: 1, color: Color(0xFFF1F5F9)),
         ),
       ),
       body: SafeArea(
@@ -284,9 +277,9 @@ class CustomerDetailsPage extends StatelessWidget {
                                     color: AppColors.textPrimary,
                                   ),
                                 ),
-                                Text(
-                                  '= ₹${customer.instantRupees.toStringAsFixed(2)}',
-                                  style: const TextStyle(
+                                const Text(
+                                  'Available pts',
+                                  style: TextStyle(
                                     fontFamily: 'Inter',
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
@@ -327,7 +320,8 @@ class CustomerDetailsPage extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  customer.futurePointsNote ?? 'Standard balance',
+                                  customer.futurePointsNote ??
+                                      'Standard balance',
                                   style: const TextStyle(
                                     fontFamily: 'Inter',
                                     fontSize: 11,

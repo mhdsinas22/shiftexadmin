@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shiftexadmin/core/constants/app_colors.dart';
 import 'package:shiftexadmin/features/settings/daily_streak_settings/domain/entities/daily_streak_statistics_entity.dart';
-import 'package:shiftexadmin/features/settings/points_to_cash/domain/entities/points_to_cash_config_entity.dart';
 
 class DailyStreakPerformanceCardWidget extends StatelessWidget {
   final DailyStreakStatisticsEntity statistics;
@@ -44,11 +43,6 @@ class DailyStreakPerformanceCardWidget extends StatelessWidget {
       badgeTextColor = const Color(0xFF15803D);
       badgeLabel = 'Healthy';
     }
-
-    final double poolInr = PointsToCashConfigEntity.inrFromPoints(
-      points: statistics.distributedPoints30d,
-      pointsPerRupee: pointsPerRupee,
-    );
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -141,9 +135,7 @@ class DailyStreakPerformanceCardWidget extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      hasData
-                          ? '= ₹${poolInr.toStringAsFixed(2)} pool'
-                          : 'Total: ${_formatNumber(statistics.totalPointsDistributed)} pts',
+                      'Total: ${_formatNumber(statistics.totalPointsDistributed)} pts',
                       style: const TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 11,

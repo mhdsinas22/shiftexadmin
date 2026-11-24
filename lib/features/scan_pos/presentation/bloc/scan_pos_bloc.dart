@@ -703,7 +703,7 @@ class ScanPosBloc extends Bloc<ScanPosEvent, ScanPosState> {
           billNumberInput: '',
           errorMessage: '',
           successMessage:
-              'Allocated ${result.totalPointsAllocated} pts (₹${result.totalInrEquivalent.toStringAsFixed(2)}) to ${result.fullName} • Bill #${result.billNumber}',
+              'Allocated ${result.totalPointsAllocated} pts to ${result.fullName} • Bill #${result.billNumber}',
         ),
       );
     } catch (e) {
@@ -825,7 +825,7 @@ class ScanPosBloc extends Bloc<ScanPosEvent, ScanPosState> {
           redeemPointsInput: '',
           billNumberInput: '',
           successMessage:
-              'Claim verified! Redeemed ${result.redeemedPoints} pts (₹${result.inrValue.toStringAsFixed(2)}) for ${result.fullName}.',
+              'Claim verified! Redeemed ${result.redeemedPoints} pts for ${result.fullName}.',
         ),
       );
     } catch (e) {
