@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shiftexadmin/core/utils/app_logger.dart';
 import 'package:shiftexadmin/features/user_management/domain/entities/customer_entity.dart';
 import 'package:shiftexadmin/features/user_management/domain/usecases/approve_customer_usecase.dart';
+import 'package:shiftexadmin/features/user_management/domain/usecases/create_customer_usecase.dart';
 import 'package:shiftexadmin/features/user_management/domain/usecases/get_customer_details_usecase.dart';
 import 'package:shiftexadmin/features/user_management/domain/usecases/get_customers_usecase.dart';
 import 'package:shiftexadmin/features/user_management/domain/usecases/get_top_earners_usecase.dart';
@@ -19,6 +20,7 @@ class UserManagementBloc
   final RejectCustomerUseCase rejectCustomerUseCase;
   final GetCustomerDetailsUseCase getCustomerDetailsUseCase;
   final GetTopEarnersUseCase? getTopEarnersUseCase;
+  final CreateCustomerUseCase? createCustomerUseCase;
 
   Timer? _debounceTimer;
 
@@ -29,6 +31,7 @@ class UserManagementBloc
     required this.rejectCustomerUseCase,
     required this.getCustomerDetailsUseCase,
     this.getTopEarnersUseCase,
+    this.createCustomerUseCase,
   }) : super(const UserManagementState()) {
     on<LoadUserManagementRequested>(_onLoadUserManagement);
     on<SearchCustomersRequested>(_onSearchCustomers);
@@ -39,6 +42,7 @@ class UserManagementBloc
     on<RejectCustomerRequested>(_onRejectCustomer);
     on<RefreshUserManagementRequested>(_onRefreshUserManagement);
     on<LoadCustomerDetailsRequested>(_onLoadCustomerDetails);
+    on<CreateCustomerRequested>(_onCreateCustomer);
   }
 
   @override
@@ -418,6 +422,70 @@ class UserManagementBloc
       emit(state.copyWith(selectedCustomer: customer));
     } catch (e) {
       AppLogger.error('Error loading customer details: $e');
+    }
+  }
+
+  Future<void> _onCreateCustomer(
+    CreateCustomerRequested event,
+    Emitter<UserManagementState> emit,
+  ) async {
+    final useCase = createCustomerUseCase;
+    if (useCase == null) return;
+
+    emit(
+      state.copyWith(
+        status: UserManagementStatus.creating,
+        errorMessage: '',
+        clearSuccessMessage: true,
+      ),
+    );
+
+    try {
+      final created = await useCase.execute(
+        fullName: event.fullName,
+        email: event.email,
+        mobileNumber: event.mobileNumber,
+        password: event.password,
+        confirmPassword: event.confirmPassword,
+        approvalStatus: event.approvalStatus,
+        membershipTier: event.membershipTier,
+        initialPoints: event.initialPoints,
+      );
+
+      final statistics = await getUserStatisticsUseCase.execute();
+      final customers = await getCustomersUseCase.execute(
+        status: state.selectedFilter,
+        searchQuery: state.searchQuery,
+        sortBy: state.sortBy,
+      );
+      final topEarners = await _fetchTopEarners(
+        state.topEarnersRange,
+        customers,
+      );
+
+      emit(
+        state.copyWith(
+          status: UserManagementStatus.loaded,
+          statistics: statistics,
+          customers: customers,
+          topEarners: topEarners,
+          hasLoadedOnce: true,
+          errorMessage: '',
+          successMessage:
+              'Customer account created for ${created.fullName} (${created.formattedCustomerId})!',
+        ),
+      );
+    } catch (e) {
+      AppLogger.error('Error creating customer account: $e');
+      emit(
+        state.copyWith(
+          status: UserManagementStatus.error,
+          errorMessage: e
+              .toString()
+              .replaceFirst(RegExp(r'^Exception:\s*'), '')
+              .replaceFirst(RegExp(r'^Invalid argument\(s\):\s*'), ''),
+        ),
+      );
     }
   }
 }

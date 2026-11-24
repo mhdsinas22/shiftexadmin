@@ -48,3 +48,25 @@ class LoadCustomerDetailsRequested extends UserManagementEvent {
   final String customerId;
   const LoadCustomerDetailsRequested(this.customerId);
 }
+
+class CreateCustomerRequested extends UserManagementEvent {
+  final String fullName;
+  final String email;
+  final String mobileNumber;
+  final String password;
+  final String confirmPassword;
+  final String approvalStatus;
+  final String membershipTier;
+  final int initialPoints;
+
+  const CreateCustomerRequested({
+    required this.fullName,
+    required this.email,
+    required this.mobileNumber,
+    required this.password,
+    required this.confirmPassword,
+    this.approvalStatus = 'approved',
+    this.membershipTier = 'Pebble Black Member',
+    this.initialPoints = 0,
+  });
+}

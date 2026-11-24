@@ -9,6 +9,7 @@ import 'package:shiftexadmin/features/user_management/presentation/bloc/user_man
 import 'package:shiftexadmin/features/user_management/presentation/bloc/user_management_event.dart';
 import 'package:shiftexadmin/features/user_management/presentation/bloc/user_management_state.dart';
 import 'package:shiftexadmin/features/user_management/presentation/widgets/approval_confirmation_dialog_widget.dart';
+import 'package:shiftexadmin/features/user_management/presentation/widgets/create_customer_sheet_widget.dart';
 import 'package:shiftexadmin/features/user_management/presentation/widgets/customer_details_sheet_widget.dart';
 import 'package:shiftexadmin/features/user_management/presentation/widgets/customer_directory_card_shimmer_widget.dart';
 import 'package:shiftexadmin/features/user_management/presentation/widgets/customer_directory_card_widget.dart';
@@ -243,13 +244,9 @@ class _UserManagementViewState extends State<UserManagementView> {
                         }
                       },
                       onAddUserPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Customer registration is handled via the Customer app.',
-                            ),
-                            behavior: SnackBarBehavior.floating,
-                          ),
+                        CreateCustomerSheetWidget.show(
+                          context,
+                          bloc: context.read<UserManagementBloc>(),
                         );
                       },
                     ),
@@ -312,15 +309,20 @@ class _UserManagementViewState extends State<UserManagementView> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'User Directory (${state.customers.length})',
-                            style: const TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
+                          Expanded(
+                            child: Text(
+                              'User Directory (${state.customers.length})',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
                           ),
+                          const SizedBox(width: 8),
                           const Text(
                             'Showing recent',
                             style: TextStyle(

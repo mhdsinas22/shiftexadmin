@@ -106,19 +106,24 @@ class TopEarnersCardWidgetState extends State<TopEarnersCardWidget> {
                 ),
               ),
               const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildRangeItem('Weekly'),
-                    _buildRangeItem('Monthly'),
-                    _buildRangeItem('All'),
-                  ],
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildRangeItem('Weekly'),
+                        _buildRangeItem('Monthly'),
+                        _buildRangeItem('All'),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],

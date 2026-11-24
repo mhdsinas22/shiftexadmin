@@ -27,7 +27,8 @@ import 'package:shiftexadmin/features/user_management/domain/usecases/reject_cus
 
 class _FakeDashboardRepository implements DashboardRepository {
   bool shouldFail = false;
-  String failureMessage = 'Unauthorized: Only authorized admins can view the Admin Dashboard.';
+  String failureMessage =
+      'Unauthorized: Only authorized admins can view the Admin Dashboard.';
   int overviewCallCount = 0;
   int ledgerCallCount = 0;
   LedgerCategoryFilter? lastRequestedCategory;
@@ -323,6 +324,17 @@ class _FakeUserManagementRepository implements UserManagementRepository {
   @override
   Future<CustomerEntity> getCustomerDetails(String customerId) async =>
       dashboardRepository.pendingVerifications.first;
+
+  @override
+  Future<CustomerEntity> createCustomer({
+    required String fullName,
+    required String email,
+    required String mobileNumber,
+    required String password,
+    String approvalStatus = 'approved',
+    String membershipTier = 'Pebble Black Member',
+    int initialPoints = 0,
+  }) => throw UnimplementedError();
 }
 
 void main() {
@@ -418,7 +430,8 @@ void main() {
               'category': 'purchases',
               'title': 'Counter #1 POS',
               'points_delta': 250,
-              'points_per_rupee': 10, // historical rate was 10 pts = ₹1 even though active rate is 20
+              'points_per_rupee':
+                  10, // historical rate was 10 pts = ₹1 even though active rate is 20
               'points_to_inr_rate': 0.10,
               'inr_value': 25.00, // historical ₹25.00 preserved!
               'is_auto_bonus': false,
@@ -621,7 +634,10 @@ void main() {
         await tester.pump();
 
         // 1) Header & Greeting
-        expect(find.byKey(const Key('dashboard_greeting_text')), findsOneWidget);
+        expect(
+          find.byKey(const Key('dashboard_greeting_text')),
+          findsOneWidget,
+        );
         expect(find.textContaining('Mohamed'), findsOneWidget);
         expect(
           find.text('Super Admin • ShiftEx Central Control'),

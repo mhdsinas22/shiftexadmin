@@ -55,4 +55,25 @@ class UserManagementRepositoryImpl implements UserManagementRepository {
   Future<void> rejectCustomer(String customerId, String reason) {
     return remoteDatasource.rejectCustomer(customerId, reason);
   }
+
+  @override
+  Future<CustomerEntity> createCustomer({
+    required String fullName,
+    required String email,
+    required String mobileNumber,
+    required String password,
+    String approvalStatus = 'approved',
+    String membershipTier = 'Pebble Black Member',
+    int initialPoints = 0,
+  }) {
+    return remoteDatasource.createCustomer(
+      fullName: fullName,
+      email: email,
+      mobileNumber: mobileNumber,
+      password: password,
+      approvalStatus: approvalStatus,
+      membershipTier: membershipTier,
+      initialPoints: initialPoints,
+    );
+  }
 }

@@ -22,4 +22,16 @@ abstract class UserManagementRepository {
   Future<void> approveCustomer(String customerId);
 
   Future<void> rejectCustomer(String customerId, String reason);
+
+  Future<CustomerEntity> createCustomer({
+    required String fullName,
+    required String email,
+    required String mobileNumber,
+    required String password,
+    String approvalStatus = 'approved',
+    String membershipTier = 'Pebble Black Member',
+    int initialPoints = 0,
+  }) {
+    throw UnimplementedError('createCustomer is not implemented.');
+  }
 }

@@ -13,7 +13,8 @@ class QuickCreatePopupWidget extends StatefulWidget {
     bool isSchedule,
     List<int>? imageBytes,
     String? imageFileName,
-  }) onSubmit;
+  })
+  onSubmit;
 
   const QuickCreatePopupWidget({
     super.key,
@@ -205,8 +206,18 @@ class _QuickCreatePopupWidgetState extends State<QuickCreatePopupWidget> {
 
   String _formatDate(DateTime dt) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
   }
@@ -327,10 +338,7 @@ class _QuickCreatePopupWidgetState extends State<QuickCreatePopupWidget> {
       decoration: BoxDecoration(
         color: AppColors.pureWhite,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(0xFFF1F5F9),
-          width: 1.2,
-        ),
+        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x060F172A),
@@ -463,7 +471,10 @@ class _QuickCreatePopupWidgetState extends State<QuickCreatePopupWidget> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.linkBlue, width: 1.5),
+                        borderSide: const BorderSide(
+                          color: AppColors.linkBlue,
+                          width: 1.5,
+                        ),
                       ),
                     ),
                   ),
@@ -513,7 +524,10 @@ class _QuickCreatePopupWidgetState extends State<QuickCreatePopupWidget> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.linkBlue, width: 1.5),
+                        borderSide: const BorderSide(
+                          color: AppColors.linkBlue,
+                          width: 1.5,
+                        ),
                       ),
                     ),
                   ),
@@ -788,11 +802,15 @@ class _QuickCreatePopupWidgetState extends State<QuickCreatePopupWidget> {
                             ),
                             const SizedBox(height: 6),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF8FAFC),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                                border: Border.all(
+                                  color: const Color(0xFFE2E8F0),
+                                ),
                               ),
                               child: DropdownButtonHideUnderline(
                                 child: DropdownButton<int>(
@@ -804,10 +822,22 @@ class _QuickCreatePopupWidgetState extends State<QuickCreatePopupWidget> {
                                     color: Color(0xFF64748B),
                                   ),
                                   items: const [
-                                    DropdownMenuItem(value: 5, child: Text('5 seconds')),
-                                    DropdownMenuItem(value: 6, child: Text('6 seconds')),
-                                    DropdownMenuItem(value: 8, child: Text('8 seconds')),
-                                    DropdownMenuItem(value: 10, child: Text('10 seconds')),
+                                    DropdownMenuItem(
+                                      value: 5,
+                                      child: Text('5 seconds'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 6,
+                                      child: Text('6 seconds'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 8,
+                                      child: Text('8 seconds'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 10,
+                                      child: Text('10 seconds'),
+                                    ),
                                   ],
                                   onChanged: (val) {
                                     if (val != null) {
@@ -838,11 +868,15 @@ class _QuickCreatePopupWidgetState extends State<QuickCreatePopupWidget> {
                             ),
                             const SizedBox(height: 6),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF8FAFC),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                                border: Border.all(
+                                  color: const Color(0xFFE2E8F0),
+                                ),
                               ),
                               child: DropdownButtonHideUnderline(
                                 child: DropdownButton<String>(
@@ -900,7 +934,10 @@ class _QuickCreatePopupWidgetState extends State<QuickCreatePopupWidget> {
                     onTap: _pickDateRange,
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 11,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF8FAFC),
                         borderRadius: BorderRadius.circular(12),
@@ -926,7 +963,10 @@ class _QuickCreatePopupWidgetState extends State<QuickCreatePopupWidget> {
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFE2E8F0),
                               borderRadius: BorderRadius.circular(8),
@@ -952,7 +992,10 @@ class _QuickCreatePopupWidgetState extends State<QuickCreatePopupWidget> {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => _handleSubmit(isPublish: false, isSchedule: false),
+                          onPressed: () => _handleSubmit(
+                            isPublish: false,
+                            isSchedule: false,
+                          ),
                           style: OutlinedButton.styleFrom(
                             backgroundColor: const Color(0xFFF1F5F9),
                             foregroundColor: const Color(0xFF334155),
@@ -975,7 +1018,8 @@ class _QuickCreatePopupWidgetState extends State<QuickCreatePopupWidget> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => _handleSubmit(isPublish: false, isSchedule: true),
+                          onPressed: () =>
+                              _handleSubmit(isPublish: false, isSchedule: true),
                           style: OutlinedButton.styleFrom(
                             backgroundColor: const Color(0xFFEFF6FF),
                             foregroundColor: AppColors.linkBlue,
@@ -998,7 +1042,8 @@ class _QuickCreatePopupWidgetState extends State<QuickCreatePopupWidget> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () => _handleSubmit(isPublish: true, isSchedule: false),
+                          onPressed: () =>
+                              _handleSubmit(isPublish: true, isSchedule: false),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.linkBlue,
                             foregroundColor: AppColors.pureWhite,

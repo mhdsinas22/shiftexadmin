@@ -22,4 +22,14 @@ abstract class UserManagementRemoteDatasource {
   Future<void> approveCustomer(String customerId);
 
   Future<void> rejectCustomer(String customerId, String reason);
+
+  Future<CustomerModel> createCustomer({
+    required String fullName,
+    required String email,
+    required String mobileNumber,
+    required String password,
+    String approvalStatus = 'approved',
+    String membershipTier = 'Pebble Black Member',
+    int initialPoints = 0,
+  });
 }

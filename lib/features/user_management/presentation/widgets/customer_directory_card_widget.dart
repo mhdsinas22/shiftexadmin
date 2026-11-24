@@ -19,8 +19,18 @@ class CustomerDirectoryCardWidget extends StatelessWidget {
 
   String _formatDate(DateTime dt) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     final month = months[dt.month - 1];
     return 'Registered $month ${dt.day}, ${dt.year}';
@@ -47,10 +57,7 @@ class CustomerDirectoryCardWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.pureWhite,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(0xFFF1F5F9),
-          width: 1.2,
-        ),
+        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x060F172A),
@@ -222,11 +229,16 @@ class CustomerDirectoryCardWidget extends StatelessWidget {
                             value: 'approve',
                             child: Row(
                               children: [
-                                Icon(Icons.check_circle_outline,
-                                    size: 18, color: AppColors.eifGreen),
+                                Icon(
+                                  Icons.check_circle_outline,
+                                  size: 18,
+                                  color: AppColors.eifGreen,
+                                ),
                                 SizedBox(width: 8),
-                                Text('Approve KYC',
-                                    style: TextStyle(color: AppColors.eifGreen)),
+                                Text(
+                                  'Approve KYC',
+                                  style: TextStyle(color: AppColors.eifGreen),
+                                ),
                               ],
                             ),
                           ),
@@ -234,11 +246,16 @@ class CustomerDirectoryCardWidget extends StatelessWidget {
                             value: 'reject',
                             child: Row(
                               children: [
-                                Icon(Icons.cancel_outlined,
-                                    size: 18, color: AppColors.purered),
+                                Icon(
+                                  Icons.cancel_outlined,
+                                  size: 18,
+                                  color: AppColors.purered,
+                                ),
                                 SizedBox(width: 8),
-                                Text('Reject Customer',
-                                    style: TextStyle(color: AppColors.purered)),
+                                Text(
+                                  'Reject Customer',
+                                  style: TextStyle(color: AppColors.purered),
+                                ),
                               ],
                             ),
                           ),
@@ -310,8 +327,8 @@ class CustomerDirectoryCardWidget extends StatelessWidget {
                               customer.isRestricted
                                   ? 'Redemptions paused'
                                   : customer.instantPoints > 0
-                                      ? 'Ready to claim'
-                                      : 'Zero claimed',
+                                  ? 'Ready to claim'
+                                  : 'Zero claimed',
                               style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 10.5,
@@ -319,8 +336,8 @@ class CustomerDirectoryCardWidget extends StatelessWidget {
                                 color: customer.isRestricted
                                     ? AppColors.purered
                                     : customer.instantPoints > 0
-                                        ? AppColors.linkBlue
-                                        : AppColors.textHint,
+                                    ? AppColors.linkBlue
+                                    : AppColors.textHint,
                               ),
                             ),
                           ],
@@ -398,14 +415,19 @@ class CustomerDirectoryCardWidget extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      _formatDate(customer.createdAt),
-                      style: const TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 11,
-                        color: AppColors.textHint,
+                    Flexible(
+                      child: Text(
+                        _formatDate(customer.createdAt),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 11,
+                          color: AppColors.textHint,
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 8),
                     GestureDetector(
                       onTap: customer.isPending ? onApprove : onTap,
                       child: _buildFooterAction(),

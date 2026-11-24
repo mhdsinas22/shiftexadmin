@@ -41,11 +41,14 @@ class UserStatisticsCardWidget extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              AppTexts.medium(
-                title,
-                fontSize: 12,
-                color: AppColors.textSecondary,
+              Expanded(
+                child: AppTexts.medium(
+                  title,
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
               ),
+              if (trailingWidget != null) const SizedBox(width: 6),
               ?trailingWidget,
             ],
           ),

@@ -353,8 +353,9 @@ ScanPosBloc _createPosBloc(
 ) {
   return ScanPosBloc(
     verifyCustomerQrUseCase: VerifyCustomerQrUseCase(repository: posRepo),
-    getPosCustomerWalletUseCase:
-        GetPosCustomerWalletUseCase(repository: posRepo),
+    getPosCustomerWalletUseCase: GetPosCustomerWalletUseCase(
+      repository: posRepo,
+    ),
     allocatePosPointsUseCase: AllocatePosPointsUseCase(repository: posRepo),
     redeemCustomerClaimQrUseCase: RedeemCustomerClaimQrUseCase(
       repository: posRepo,
@@ -827,10 +828,7 @@ void main() {
         expect(find.text('Instant & Future Pts'), findsOneWidget);
         expect(find.text('Immediate credit'), findsOneWidget);
         expect(find.text('Locked until unlock'), findsOneWidget);
-        expect(
-          find.text('Confirm & Allocate 300 pts'),
-          findsOneWidget,
-        );
+        expect(find.text('Confirm & Allocate 300 pts'), findsOneWidget);
 
         // Historical item shows points-only without currency symbol
         expect(find.text('+180 pts'), findsOneWidget);

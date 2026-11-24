@@ -5,6 +5,7 @@ enum UserManagementStatus {
   initial,
   loading,
   loaded,
+  creating,
   approving,
   rejecting,
   error,

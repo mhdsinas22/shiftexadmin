@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:shiftexadmin/core/utils/app_logger.dart';
 import 'package:shiftexadmin/features/user_management/data/datasources/user_management_remote_datasource.dart';
 import 'package:shiftexadmin/features/user_management/data/models/customer_model.dart';
@@ -327,6 +328,105 @@ class UserManagementRemoteDatasourceImpl
           .eq('id', customerId);
 
       AppLogger.info('Customer $customerId rejected via direct update');
+    }
+  }
+
+  String _cleanServerError(String raw) {
+    final clean = raw.replaceFirst(
+      RegExp(
+        r'^(UNAUTHORIZED|UNAUTHENTICATED|INVALID_NAME|INVALID_EMAIL|INVALID_MOBILE|INVALID_PASSWORD|INVALID_STATUS|INVALID_POINTS|DUPLICATE_EMAIL|DUPLICATE_MOBILE|DUPLICATE_ACCOUNT|MOBILE_ALREADY_REGISTERED|AUTH_CREATE_FAILED|CUSTOMER_PROVISION_FAILED|SERVER_MISCONFIGURED):\s*',
+      ),
+      '',
+    );
+    return clean.isNotEmpty ? clean : raw;
+  }
+
+  String _extractFunctionError(FunctionException e) {
+    final details = e.details;
+    if (details is Map && details['error'] != null) {
+      return _cleanServerError(details['error'].toString());
+    }
+    if (details is String && details.trim().isNotEmpty) {
+      try {
+        final decoded = jsonDecode(details);
+        if (decoded is Map && decoded['error'] != null) {
+          return _cleanServerError(decoded['error'].toString());
+        }
+      } catch (_) {}
+      return _cleanServerError(details);
+    }
+    return _cleanServerError(
+      e.reasonPhrase ?? 'Failed to create customer account.',
+    );
+  }
+
+  @override
+  Future<CustomerModel> createCustomer({
+    required String fullName,
+    required String email,
+    required String mobileNumber,
+    required String password,
+    String approvalStatus = 'approved',
+    String membershipTier = 'Pebble Black Member',
+    int initialPoints = 0,
+  }) async {
+    final adminUser = supabaseClient.auth.currentUser;
+    if (adminUser == null) {
+      throw Exception('Unauthorized: Please log in as an administrator.');
+    }
+
+    try {
+      final response = await supabaseClient.functions.invoke(
+        'create-customer-account',
+        body: {
+          'full_name': fullName.trim(),
+          'email': email.trim().toLowerCase(),
+          'mobile_number': mobileNumber.trim(),
+          'password': password,
+          'approval_status': approvalStatus.trim().toLowerCase(),
+          'membership_tier': membershipTier.trim(),
+          'initial_points': initialPoints,
+        },
+      );
+
+      final data = response.data;
+      Map<String, dynamic>? parsedMap;
+      if (data is Map) {
+        parsedMap = Map<String, dynamic>.from(data);
+      } else if (data is String && data.trim().isNotEmpty) {
+        final decoded = jsonDecode(data);
+        if (decoded is Map) {
+          parsedMap = Map<String, dynamic>.from(decoded);
+        }
+      }
+
+      if (response.status >= 400) {
+        final err =
+            parsedMap?['error']?.toString() ??
+            'Failed to create customer account (status ${response.status}).';
+        throw Exception(_cleanServerError(err));
+      }
+
+      if (parsedMap != null) {
+        if (parsedMap['error'] != null) {
+          throw Exception(_cleanServerError(parsedMap['error'].toString()));
+        }
+        return CustomerModel.fromJson(parsedMap);
+      }
+
+      throw Exception(
+        'Invalid response from create-customer-account function.',
+      );
+    } on FunctionException catch (e) {
+      final msg = _extractFunctionError(e);
+      AppLogger.error('Edge Function create-customer-account error: $msg');
+      throw Exception(msg);
+    } on PostgrestException catch (e) {
+      AppLogger.error('Postgrest error creating customer account: ${e.message}');
+      throw Exception(_cleanServerError(e.message));
+    } catch (e) {
+      AppLogger.error('Error creating customer account: $e');
+      rethrow;
     }
   }
 }

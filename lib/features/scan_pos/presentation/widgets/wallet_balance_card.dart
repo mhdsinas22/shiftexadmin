@@ -5,16 +5,13 @@ import 'package:shiftexadmin/features/scan_pos/domain/entities/verified_pos_cust
 class WalletBalanceCard extends StatelessWidget {
   final VerifiedPosCustomerEntity customer;
 
-  const WalletBalanceCard({
-    super.key,
-    required this.customer,
-  });
+  const WalletBalanceCard({super.key, required this.customer});
 
   String _formatNumber(int number) {
     return number.toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]},',
-        );
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]},',
+    );
   }
 
   @override

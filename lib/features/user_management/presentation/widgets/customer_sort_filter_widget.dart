@@ -98,44 +98,51 @@ class CustomerSortFilterWidget extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        GestureDetector(
-          onTap: () => _showSortMenu(context),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.sort_rounded,
-                size: 16,
-                color: AppColors.textSecondary,
-              ),
-              const SizedBox(width: 6),
-              RichText(
-                text: TextSpan(
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
-                  children: [
-                    const TextSpan(text: 'Sort: '),
-                    TextSpan(
-                      text: _sortLabel,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
+        Flexible(
+          child: GestureDetector(
+            onTap: () => _showSortMenu(context),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.sort_rounded,
+                  size: 16,
+                  color: AppColors.textSecondary,
                 ),
-              ),
-              const Icon(
-                Icons.keyboard_arrow_down_rounded,
-                size: 16,
-                color: AppColors.textSecondary,
-              ),
-            ],
+                const SizedBox(width: 6),
+                Flexible(
+                  child: RichText(
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    text: TextSpan(
+                      style: const TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                      children: [
+                        const TextSpan(text: 'Sort: '),
+                        TextSpan(
+                          text: _sortLabel,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
+              ],
+            ),
           ),
         ),
+        const SizedBox(width: 8),
         GestureDetector(
           onTap: onFilterOptionsPressed ?? () => _showSortMenu(context),
           child: const Row(
