@@ -5,10 +5,7 @@ import 'package:shiftexadmin/features/scan_pos/domain/entities/verified_pos_cust
 class ManualQrCodeDialog extends StatefulWidget {
   final ScanPosMode mode;
 
-  const ManualQrCodeDialog({
-    super.key,
-    required this.mode,
-  });
+  const ManualQrCodeDialog({super.key, required this.mode});
 
   static Future<String?> show(
     BuildContext context, {
@@ -48,6 +45,7 @@ class _ManualQrCodeDialogState extends State<ManualQrCodeDialog> {
     final isClaim = widget.mode == ScanPosMode.verifyClaim;
 
     return AlertDialog(
+      backgroundColor: AppColors.pureWhite,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Text(
         isClaim ? 'Enter Claim QR Code' : 'Enter Member QR Code',
@@ -64,8 +62,8 @@ class _ManualQrCodeDialogState extends State<ManualQrCodeDialog> {
         children: [
           Text(
             isClaim
-                ? 'Enter the short code (e.g. CLM-5A9A-1FE) or full SHIIFTEX:CLAIM payload shown on the customer app.'
-                : 'Enter the short code (e.g. ACC-DE0A-FC73) or full SHIIFTEX:ACCRUAL payload shown on the customer Member QR.',
+                ? 'Enter the Claim QR code (e.g. CLM-5A9A-1FE), Order Ref, or full SHIIFTEX:CLAIM payload shown on the customer app.'
+                : 'Enter the Member QR code (e.g. ACC-DE0A-FC73), Member ID (e.g. SHFT-81F6), or mobile number.',
             style: const TextStyle(
               fontFamily: 'Inter',
               fontSize: 12.5,
@@ -79,8 +77,15 @@ class _ManualQrCodeDialogState extends State<ManualQrCodeDialog> {
             autofocus: true,
             textCapitalization: TextCapitalization.characters,
             onSubmitted: (_) => _submit(),
+            onChanged: (_) {
+              if (_error != null) {
+                setState(() => _error = null);
+              }
+            },
             decoration: InputDecoration(
-              hintText: isClaim ? 'CLM-XXXX-XXX' : 'ACC-XXXX-XXXX',
+              hintText: isClaim
+                  ? 'CLM-XXXX-XXX'
+                  : 'ACC-XXXX-XXXX or SHFT-XXXX',
               errorText: _error,
               filled: true,
               fillColor: const Color(0xFFF8FAFC),

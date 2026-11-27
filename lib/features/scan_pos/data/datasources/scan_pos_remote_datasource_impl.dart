@@ -28,6 +28,43 @@ class ScanPosRemoteDataSourceImpl implements ScanPosRemoteDataSource {
     return clean.isNotEmpty ? clean : msg;
   }
 
+  String _normalizeAlnum(String value) =>
+      value.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
+
+  Future<VerifiedPosCustomerModel?> _tryFallbackCustomerLookup(
+    String rawInput,
+  ) async {
+    final cleaned = rawInput.trim();
+    if (cleaned.length < 4) return null;
+
+    final targetAlnum = _normalizeAlnum(cleaned);
+    final candidates = await searchCustomers(query: cleaned, limit: 10);
+    for (final c in candidates) {
+      if (!c.isApproved) continue;
+      final memberAlnum = _normalizeAlnum(c.membershipId);
+      final phoneDigits = c.mobileNumber.replaceAll(RegExp(r'[^0-9]'), '');
+      final inputDigits = cleaned.replaceAll(RegExp(r'[^0-9]'), '');
+
+      final matchesMemberCode =
+          memberAlnum.isNotEmpty &&
+          (memberAlnum == targetAlnum ||
+              memberAlnum == 'SHFT$targetAlnum' ||
+              'SHFT$memberAlnum' == targetAlnum);
+      final matchesPhone =
+          inputDigits.length >= 8 &&
+          phoneDigits.isNotEmpty &&
+          (phoneDigits == inputDigits || phoneDigits.endsWith(inputDigits));
+      final matchesEmail =
+          c.email.isNotEmpty &&
+          c.email.toLowerCase() == cleaned.toLowerCase();
+
+      if (matchesMemberCode || matchesPhone || matchesEmail) {
+        return c;
+      }
+    }
+    return null;
+  }
+
   @override
   Future<VerifiedPosCustomerModel> verifyCustomerQr({
     required String qrInput,
@@ -53,6 +90,13 @@ class ScanPosRemoteDataSourceImpl implements ScanPosRemoteDataSource {
       }
       throw Exception('Invalid verification response from server.');
     } on PostgrestException catch (e) {
+      if (mode == ScanPosMode.giveReward &&
+          e.message.toLowerCase().contains('not recognized')) {
+        try {
+          final fallback = await _tryFallbackCustomerLookup(qrInput);
+          if (fallback != null) return fallback;
+        } catch (_) {}
+      }
       AppLogger.warning('QR verification failed: ${e.message}');
       throw Exception(_mapPostgrestError(e));
     } catch (e) {

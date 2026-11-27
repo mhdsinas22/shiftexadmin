@@ -55,6 +55,7 @@ class SettingsView extends StatelessWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.pureWhite,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Confirm Sign Out'),
         content: const Text('Are you sure you want to end your admin session?'),
